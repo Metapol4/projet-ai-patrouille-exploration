@@ -4,6 +4,13 @@
 #include "SO_Flag.h"
 
 USO_Flag::USO_Flag()
-{ // FIXME: spline spawns at world 0,0,0. idk why but its not important for now
+{
+	// FIXME: spline spawns at world 0,0,0. idk why but its not important for now
 	Spline = CreateDefaultSubobject<USplineComponent>("PatrolSpline");
+}
+
+void USO_Flag::Test()
+{
+	if (GEngine)
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("I AM %s"), *GetName()));
 }

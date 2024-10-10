@@ -18,4 +18,6 @@ class EXPLORATION_PATROL_API USO_Flag : public USmartObjectComponent
 public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	USplineComponent* Spline;
+	UFUNCTION(BlueprintCallable)
+	void Test();
 };
