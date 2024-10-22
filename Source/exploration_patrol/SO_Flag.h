@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "EFlagImportance.h"
 #include "SmartObjectComponent.h"
-#include "Components/SplineComponent.h"
 #include "SO_Flag.generated.h"
 
 /**
@@ -15,9 +15,11 @@ class EXPLORATION_PATROL_API USO_Flag : public USmartObjectComponent
 {
 	GENERATED_BODY()
 	USO_Flag();
-public:
+public: // i think we'll be stuck with BP spline, this one seems severely bugged
+	//UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	//USplineComponent* Spline;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	USplineComponent* Spline;
+	EFlagImportance ImportanceLevel = EFlagImportance::NORMAL;
 	UFUNCTION(BlueprintCallable)
 	void Test();
 };
