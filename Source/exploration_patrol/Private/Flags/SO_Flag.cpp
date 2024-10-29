@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "SO_Flag.h"
+#include "Flags/SO_Flag.h"
 
 USO_Flag::USO_Flag()
 {
