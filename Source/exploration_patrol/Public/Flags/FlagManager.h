@@ -32,4 +32,6 @@ public:
 	TArray<FFlagSegment*> GetSegments() const;
 	TArray<AFlagActor*> GetFlags() const;
 	void ReceiveSegmentBatch(const TArray<FFlagSegment*>& SegmentBatch);
+	UFUNCTION(CallInEditor, BlueprintCallable)
+	void TestSegmentBatch();
 };

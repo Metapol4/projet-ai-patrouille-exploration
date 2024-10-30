@@ -3,6 +3,9 @@
 
 #include "Flags/FlagManager.h"
 
+#include "exploration_patrol/exploration_patrolCharacter.h"
+#include "Kismet/GameplayStatics.h"
+
 
 // Sets default values
 AFlagManager::AFlagManager()
@@ -83,4 +86,14 @@ void AFlagManager::ReceiveSegmentBatch(const TArray<FFlagSegment*>& SegmentBatch
 	Segments = SegmentBatch;
 	CreateFlagsFromSegments();
 	LinkFlags();
+}
+
+void AFlagManager::TestSegmentBatch()
+{
+	/*TArray<AActor*> TestSubjects;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), Aexploration_patrolCharacter::StaticClass(), TestSubjects);
+	for (AActor* TestSubject : TestSubjects)
+	{
+		
+	}*/
 }
