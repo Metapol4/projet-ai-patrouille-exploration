@@ -3,25 +3,84 @@
 
 #include "Flags/FlagManager.h"
 
+
 // Sets default values
 AFlagManager::AFlagManager()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
 }
 
 // Called when the game starts or when spawned
 void AFlagManager::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
-// Called every frame
-void AFlagManager::Tick(float DeltaTime)
+
+void AFlagManager::CreateFlagsFromSegments()
 {
-	Super::Tick(DeltaTime);
-
+	for (FFlagSegment* Flag : Segments)
+	{
+		AFlagActor* FlagActor = Cast<AFlagActor>(GetWorld()->SpawnActor(AFlagActor::StaticClass()));
+		FlagActor->SOFlag->Segment = *Flag;
+		FVector MiddlePos = (Flag->BeginPosition + Flag->EndPosition) / 2;
+		FlagActor->SetActorLocation(MiddlePos);
+	}
 }
 
+void AFlagManager::ClearAll()
+{
+	Segments.Empty();
+	for (AFlagActor* Flag : Flags)
+	{
+		Flag->Destroy();
+	}
+}
+
+void AFlagManager::LinkFlags()
+{
+	for (AFlagActor* InFlag : Flags) // TODO: FIXME: is this too ugly? this is version 1
+	{
+		for (AFlagActor* OutFlag : Flags)
+		{
+			//begin
+			if(InFlag->SOFlag->Segment.BeginPosition == OutFlag->SOFlag->Segment.BeginPosition)
+			{
+				InFlag->SOFlag->AddToBeginning(OutFlag->SOFlag);
+			}
+			if(InFlag->SOFlag->Segment.BeginPosition == OutFlag->SOFlag->Segment.EndPosition)
+			{
+				InFlag->SOFlag->AddToBeginning(OutFlag->SOFlag);
+			}
+			//end
+			if(InFlag->SOFlag->Segment.EndPosition == OutFlag->SOFlag->Segment.BeginPosition)
+			{
+				InFlag->SOFlag->AddToEnd(OutFlag->SOFlag);
+			}
+			if(InFlag->SOFlag->Segment.EndPosition == OutFlag->SOFlag->Segment.EndPosition)
+			{
+				InFlag->SOFlag->AddToEnd(OutFlag->SOFlag);
+			}
+		}
+	}
+}
+
+TArray<FFlagSegment*> AFlagManager::GetSegments() const
+{
+	return Segments;
+}
+
+TArray<AFlagActor*> AFlagManager::GetFlags() const
+{
+	return Flags;
+}
+
+
+void AFlagManager::ReceiveSegmentBatch(const TArray<FFlagSegment*>& SegmentBatch)
+{
+	ClearAll();
+	Segments = SegmentBatch;
+	CreateFlagsFromSegments();
+	LinkFlags();
+}

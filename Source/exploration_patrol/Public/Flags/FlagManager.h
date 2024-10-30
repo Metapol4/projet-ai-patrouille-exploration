@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FlagActor.h"
+#include "SO_Flag.h"
 #include "GameFramework/Actor.h"
 #include "FlagManager.generated.h"
 
@@ -18,9 +20,16 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
+	TArray<FFlagSegment*> Segments;
+	TArray<AFlagActor*> Flags;
+	UFUNCTION()
+	void CreateFlagsFromSegments();
+	UFUNCTION()
+	void ClearAll();
+	UFUNCTION()
+	void LinkFlags();
+public:
+	TArray<FFlagSegment*> GetSegments() const;
+	TArray<AFlagActor*> GetFlags() const;
+	void ReceiveSegmentBatch(const TArray<FFlagSegment*>& SegmentBatch);
 };
