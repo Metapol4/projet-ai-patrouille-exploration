@@ -20,7 +20,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	TArray<FFlagSegment*> Segments;
+	TArray<FFlagSegment> Segments;
 	TArray<AFlagActor*> FlagActors;
 	UFUNCTION()
 	void CreateFlagsFromSegments();
@@ -29,9 +29,10 @@ protected:
 	UFUNCTION()
 	void LinkFlags();
 public:
-	TArray<FFlagSegment*> GetSegments() const;
+	TArray<FFlagSegment> GetSegments() const;
 	TArray<AFlagActor*> GetFlagActors() const;
-	void ReceiveSegmentBatch(const TArray<FFlagSegment*>& SegmentBatch);
+	void ReceiveSegmentBatch(const TArray<FFlagSegment>& SegmentBatch);
 	UFUNCTION(CallInEditor, BlueprintCallable)
 	void TestSegmentBatch();
+	int CurrentId;
 };

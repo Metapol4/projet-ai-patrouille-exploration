@@ -18,9 +18,11 @@ void USO_Flag::Test()
 void USO_Flag::AddToBeginConnections(USO_Flag* FlagToconnect)
 {
 	BeginPointConnections.Add(FlagToconnect);
+	BeginPointIds.Add(FlagToconnect->Segment.id);
 }
 
 void USO_Flag::AddToEndConnections(USO_Flag* FlagToconnect)
 {
 	EndPointConnections.Add(FlagToconnect);
+	EndPointIds.Add(FlagToconnect->Segment.id);
 }

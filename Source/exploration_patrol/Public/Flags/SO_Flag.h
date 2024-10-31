@@ -12,13 +12,13 @@ USTRUCT(BlueprintType)
 struct FFlagSegment
 {
 	GENERATED_BODY()
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	uint8 id; // is this useful?
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	FVector BeginPosition;
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	FVector EndPosition;
-	UPROPERTY()
+	UPROPERTY(EditAnywhere)
 	EFlagDirection Direction; // could also be a vector ? this seems more practical tho
 };
 
@@ -35,13 +35,17 @@ public:
 	UFUNCTION()
 	void AddToBeginConnections(USO_Flag* FlagToconnect);
 	void AddToEndConnections(USO_Flag* FlagToconnect);
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY()
 	TArray<USO_Flag*> BeginPointConnections;
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY()
 	TArray<USO_Flag*> EndPointConnections;
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<int> BeginPointIds;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<int> EndPointIds;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EFlagType FlagType;
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FFlagSegment Segment;
 	
 };

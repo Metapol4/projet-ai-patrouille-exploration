@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "NavigationData.h"
 #include "NavigationSystem.h"
+#include "Flags/FlagManager.h"
+#include "Flags/SO_Flag.h"
 #include "NavMesh/NavMeshBoundsVolume.h"
 #include "NavMesh/RecastNavMesh.h"
 #include "SkeletalNavMeshBoundsVolume.generated.h"
@@ -26,11 +28,18 @@ public:
 
 	UPROPERTY(EditAnywhere, Category=RecastNevMesh)
 	AActor* EndPoint;
-	
+
 	TArray<NavNodeRef> PolyArray;
-	
+
+	TArray<FFlagSegment> FlagSegments;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	AFlagManager* FlagManager;
+
+	UFUNCTION(CallInEditor, BlueprintCallable)
+	void SendFlagBatch();
+
 	bool NavPoly_GetAllPolys(TArray<NavNodeRef>& Polys);
 	bool TileIsValid(const ARecastNavMesh* Navmesh, int32 TileIndex) const;
 	virtual void BeginPlay() override;
 };
- 

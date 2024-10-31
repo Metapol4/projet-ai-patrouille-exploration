@@ -3,6 +3,7 @@
 
 #include "Flags/FlagManager.h"
 
+#include "VectorTypes.h"
 #include "exploration_patrol/exploration_patrolCharacter.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -23,12 +24,16 @@ void AFlagManager::BeginPlay()
 
 void AFlagManager::CreateFlagsFromSegments()
 {
-	for (FFlagSegment* Flag : Segments)
+	for (FFlagSegment Flag : Segments)
 	{
 		AFlagActor* FlagActor = Cast<AFlagActor>(GetWorld()->SpawnActor(AFlagActor::StaticClass()));
-		FlagActor->SOFlag->Segment = *Flag;
-		FVector MiddlePos = (Flag->BeginPosition + Flag->EndPosition) / 2;
+		FlagActor->SOFlag->Segment = Flag;
+		FlagActor->SOFlag->Segment.id = CurrentId;
+		CurrentId++;
+		FVector MiddlePos = (Flag.BeginPosition + Flag.EndPosition) / 2;
 		FlagActor->SetActorLocation(MiddlePos);
+		FlagActor->DrawDebugSegmentFlag();
+		FlagActors.Add(FlagActor);
 	}
 }
 
@@ -47,21 +52,27 @@ void AFlagManager::LinkFlags()
 	{
 		for (AFlagActor* OutFlag : FlagActors)
 		{
+			if(InFlag == OutFlag)
+				continue;
 			//begin
-			if(InFlag->SOFlag->Segment.BeginPosition == OutFlag->SOFlag->Segment.BeginPosition)
+			if (UE::Geometry::Distance(InFlag->SOFlag->Segment.BeginPosition, OutFlag->SOFlag->Segment.BeginPosition) <
+				1.0f)
 			{
 				InFlag->SOFlag->AddToBeginConnections(OutFlag->SOFlag);
 			}
-			if(InFlag->SOFlag->Segment.BeginPosition == OutFlag->SOFlag->Segment.EndPosition)
+			if (UE::Geometry::Distance(InFlag->SOFlag->Segment.BeginPosition, OutFlag->SOFlag->Segment.EndPosition) <
+				1.0f)
 			{
 				InFlag->SOFlag->AddToBeginConnections(OutFlag->SOFlag);
 			}
 			//end
-			if(InFlag->SOFlag->Segment.EndPosition == OutFlag->SOFlag->Segment.BeginPosition)
+			if (UE::Geometry::Distance(InFlag->SOFlag->Segment.EndPosition, OutFlag->SOFlag->Segment.BeginPosition) <
+				1.0f)
 			{
 				InFlag->SOFlag->AddToEndConnections(OutFlag->SOFlag);
 			}
-			if(InFlag->SOFlag->Segment.EndPosition == OutFlag->SOFlag->Segment.EndPosition)
+			if (UE::Geometry::Distance(InFlag->SOFlag->Segment.EndPosition, OutFlag->SOFlag->Segment.EndPosition) <
+				1.0f)
 			{
 				InFlag->SOFlag->AddToEndConnections(OutFlag->SOFlag);
 			}
@@ -69,7 +80,7 @@ void AFlagManager::LinkFlags()
 	}
 }
 
-TArray<FFlagSegment*> AFlagManager::GetSegments() const
+TArray<FFlagSegment> AFlagManager::GetSegments() const
 {
 	return Segments;
 }
@@ -80,7 +91,7 @@ TArray<AFlagActor*> AFlagManager::GetFlagActors() const
 }
 
 
-void AFlagManager::ReceiveSegmentBatch(const TArray<FFlagSegment*>& SegmentBatch)
+void AFlagManager::ReceiveSegmentBatch(const TArray<FFlagSegment>& SegmentBatch)
 {
 	ClearAll();
 	Segments = SegmentBatch;

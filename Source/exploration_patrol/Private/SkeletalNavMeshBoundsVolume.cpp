@@ -5,12 +5,18 @@
 
 #include "VectorTypes.h"
 
+void ASkeletalNavMeshBoundsVolume::SendFlagBatch()
+{
+	if (FlagManager)
+		FlagManager->ReceiveSegmentBatch(FlagSegments);
+}
+
 bool ASkeletalNavMeshBoundsVolume::NavPoly_GetAllPolys(TArray<NavNodeRef>& Polys)
 {
 	if (!NavMesh) return false;
 
 	TArray<FNavPoly> EachPolys;
-	for (int32 i=0; i<NavMesh->GetNavMeshTilesCount(); i++)
+	for (int32 i = 0; i < NavMesh->GetNavMeshTilesCount(); i++)
 	{
 		if (!TileIsValid(NavMesh, i))
 		{
@@ -20,7 +26,7 @@ bool ASkeletalNavMeshBoundsVolume::NavPoly_GetAllPolys(TArray<NavNodeRef>& Polys
 		NavMesh->GetPolysInTile(i, EachPolys);
 	}
 
-	for (int32 i=0; i< EachPolys.Num(); i++)
+	for (int32 i = 0; i < EachPolys.Num(); i++)
 	{
 		Polys.Add(EachPolys[i].Ref);
 	}
@@ -40,73 +46,86 @@ void ASkeletalNavMeshBoundsVolume::BeginPlay()
 	Super::BeginPlay();
 
 	if (!NavMesh) return;
-	if(!StartPoint) return;
-	if(!EndPoint) return;
-	
+	if (!StartPoint) return;
+	if (!EndPoint) return;
+
 	NavPoly_GetAllPolys(PolyArray);
 	for (NavNodeRef Polys : PolyArray)
 	{
-		FVector DebugLocation;
-		NavMesh->GetPolyCenter(Polys, DebugLocation);
+		FVector BeginLocation;
+		NavMesh->GetPolyCenter(Polys, BeginLocation);
 		TArray<NavNodeRef> Neighbors;
-		float ParentNodeDistanceToStart =  UE::Geometry::Distance(StartPoint->GetActorLocation(), DebugLocation);
-		float ParentNodeDistanceToEnd =  UE::Geometry::Distance(EndPoint->GetActorLocation(), DebugLocation);
+		float ParentNodeDistanceToStart = UE::Geometry::Distance(StartPoint->GetActorLocation(), BeginLocation);
+		float ParentNodeDistanceToEnd = UE::Geometry::Distance(EndPoint->GetActorLocation(), BeginLocation);
+
 
 		DrawDebugSphere(
 			GetWorld(),
-			DebugLocation,
+			BeginLocation,
 			5,
 			12,
 			FColor::Cyan,
 			true,
 			300);
-		
-		if(ParentNodeDistanceToStart <= ParentNodeDistanceToEnd)
+
+		if (ParentNodeDistanceToStart <= ParentNodeDistanceToEnd)
 		{
-			if(NavMesh->GetPolyNeighbors(Polys, Neighbors))
+			if (NavMesh->GetPolyNeighbors(Polys, Neighbors))
 			{
 				FVector EndLineLocation;
 				for (auto Neighbor : Neighbors)
 				{
+					FFlagSegment CurrentSegment;
+					CurrentSegment.BeginPosition = BeginLocation;
+
 					NavMesh->GetPolyCenter(Neighbor, EndLineLocation);
-					float ChildrenNodeDistance =  UE::Geometry::Distance(StartPoint->GetActorLocation(), EndLineLocation);
-					FVector AdjustedLocation = DebugLocation + (EndLineLocation - DebugLocation) * 0.9f; 
-					if(ChildrenNodeDistance > ParentNodeDistanceToStart)
+					float ChildrenNodeDistance =
+						UE::Geometry::Distance(StartPoint->GetActorLocation(), EndLineLocation);
+					FVector AdjustedLocation = BeginLocation + (EndLineLocation - BeginLocation) * 0.9f;
+					if (ChildrenNodeDistance > ParentNodeDistanceToStart)
 					{
+						CurrentSegment.EndPosition = EndLineLocation;
+						CurrentSegment.Direction = EFlagDirection::NONE;
+						FlagSegments.Add(CurrentSegment);
 						DrawDebugDirectionalArrow(
-											GetWorld(),
-											DebugLocation,
-											AdjustedLocation,
-											500,
-											FColor::Red,
-											true,
-											300
-											);
+							GetWorld(),
+							BeginLocation,
+							AdjustedLocation,
+							500,
+							FColor::Red,
+							true,
+							300
+						);
 					}
 				}
 			}
 		}
 		else
 		{
-			if(NavMesh->GetPolyNeighbors(Polys, Neighbors))
+			if (NavMesh->GetPolyNeighbors(Polys, Neighbors))
 			{
 				FVector EndLineLocation;
 				for (auto Neighbor : Neighbors)
 				{
+					FFlagSegment CurrentSegment;
+					CurrentSegment.BeginPosition = BeginLocation;
 					NavMesh->GetPolyCenter(Neighbor, EndLineLocation);
-					float ChildrenNodeDistance =  UE::Geometry::Distance(EndPoint->GetActorLocation(), EndLineLocation);
-					FVector AdjustedLocation = DebugLocation + (EndLineLocation - DebugLocation) * 0.9f; 
-					if(ChildrenNodeDistance < ParentNodeDistanceToEnd)
+					float ChildrenNodeDistance = UE::Geometry::Distance(EndPoint->GetActorLocation(), EndLineLocation);
+					FVector AdjustedLocation = BeginLocation + (EndLineLocation - BeginLocation) * 0.9f;
+					if (ChildrenNodeDistance < ParentNodeDistanceToEnd)
 					{
+						CurrentSegment.EndPosition = EndLineLocation;
+						CurrentSegment.Direction = EFlagDirection::NONE;
+						FlagSegments.Add(CurrentSegment);
 						DrawDebugDirectionalArrow(
-											GetWorld(),
-											DebugLocation,
-											AdjustedLocation,
-											500,
-											FColor::Red,
-											true,
-											300
-											);
+							GetWorld(),
+							BeginLocation,
+							AdjustedLocation,
+							500,
+							FColor::Red,
+							true,
+							300
+						);
 					}
 				}
 			}
