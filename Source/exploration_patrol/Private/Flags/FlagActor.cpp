@@ -3,6 +3,8 @@
 
 #include "Flags/FlagActor.h"
 
+#include "Components/TextRenderComponent.h"
+
 // Sets default values
 AFlagActor::AFlagActor()
 {
@@ -13,15 +15,19 @@ AFlagActor::AFlagActor()
 	UStaticMeshComponent* cubeMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Cube"));
 
 	// Load the Cube mesh
-	UStaticMesh* cubeMesh = ConstructorHelpers::FObjectFinder<UStaticMesh>(TEXT("StaticMesh'/Engine/BasicShapes/Cube.Cube'")).Object;
+	UStaticMesh* cubeMesh = ConstructorHelpers::FObjectFinder<UStaticMesh>(
+		TEXT("StaticMesh'/Engine/BasicShapes/Cube.Cube'")).Object;
 
 	// Set the component's mesh
 	cubeMeshComponent->SetStaticMesh(cubeMesh);
 
-	cubeMeshComponent->SetWorldScale3D(FVector(0.25f,0.25f,0.25f));
+	cubeMeshComponent->SetWorldScale3D(FVector(0.25f, 0.25f, 0.25f));
 
 	// Set as root component
 	RootComponent = cubeMeshComponent;
+
+	/*VisibilityGroupText->SetText(FText::FromString("0"));
+	VisibilityGroupText = CreateDefaultSubobject<UTextRenderComponent>("Visibility Group Text");*/
 }
 
 // Called when the game starts or when spawned
@@ -39,4 +45,10 @@ void AFlagActor::Tick(float DeltaTime)
 void AFlagActor::DrawDebugSegmentFlag()
 {
 	//DrawDebugBox(GetWorld(), GetActorLocation(), FVector(25, 25, 25), FColor::Green, true);
+	if (VisibilityGroupText)
+		VisibilityGroupText->Destroy();
+	VisibilityGroupText = GetWorld()->SpawnActor<ADebugBillboardText>(ADebugBillboardText::StaticClass(),
+	                                                                  GetActorLocation() + FVector(0, 0, 50),
+	                                                                  FRotator::ZeroRotator);
+	VisibilityGroupText->SetText("0"); // TODO: VISIBILITY NUMBER HERE
 }
