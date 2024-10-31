@@ -10,7 +10,8 @@
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
 				"SmartObjectsModule",
-				"NavigationSystem"
+				"NavigationSystem",
+				"Engine"
 			]
 		}
 	],

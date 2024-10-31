@@ -23,20 +23,20 @@ public:
 	UPROPERTY(EditAnywhere, Category=RecastNavMesh)
 	ARecastNavMesh* NavMesh;
 
-	UPROPERTY(EditAnywhere, Category=RecastNevMesh)
+	UPROPERTY(EditAnywhere, Category=RecastNavMesh)
 	AActor* StartPoint;
 
-	UPROPERTY(EditAnywhere, Category=RecastNevMesh)
+	UPROPERTY(EditAnywhere, Category=RecastNavMesh)
 	AActor* EndPoint;
 
 	TArray<NavNodeRef> PolyArray;
 
 	TArray<FFlagSegment> FlagSegments;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Flags)
 	AFlagManager* FlagManager;
 
-	UFUNCTION(CallInEditor, BlueprintCallable)
+	UFUNCTION(CallInEditor, BlueprintCallable, Category=Flags)
 	void SendFlagBatch();
 
 	bool NavPoly_GetAllPolys(TArray<NavNodeRef>& Polys);
