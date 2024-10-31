@@ -35,7 +35,7 @@ void AFlagManager::CreateFlagsFromSegments()
 void AFlagManager::ClearAll()
 {
 	Segments.Empty();
-	for (AFlagActor* Flag : Flags)
+	for (AFlagActor* Flag : FlagActors)
 	{
 		Flag->Destroy();
 	}
@@ -43,27 +43,27 @@ void AFlagManager::ClearAll()
 
 void AFlagManager::LinkFlags()
 {
-	for (AFlagActor* InFlag : Flags) // TODO: FIXME: is this too ugly? this is version 1
+	for (AFlagActor* InFlag : FlagActors) // TODO: FIXME: is this too ugly? this is version 1
 	{
-		for (AFlagActor* OutFlag : Flags)
+		for (AFlagActor* OutFlag : FlagActors)
 		{
 			//begin
 			if(InFlag->SOFlag->Segment.BeginPosition == OutFlag->SOFlag->Segment.BeginPosition)
 			{
-				InFlag->SOFlag->AddToBeginning(OutFlag->SOFlag);
+				InFlag->SOFlag->AddToBeginConnections(OutFlag->SOFlag);
 			}
 			if(InFlag->SOFlag->Segment.BeginPosition == OutFlag->SOFlag->Segment.EndPosition)
 			{
-				InFlag->SOFlag->AddToBeginning(OutFlag->SOFlag);
+				InFlag->SOFlag->AddToBeginConnections(OutFlag->SOFlag);
 			}
 			//end
 			if(InFlag->SOFlag->Segment.EndPosition == OutFlag->SOFlag->Segment.BeginPosition)
 			{
-				InFlag->SOFlag->AddToEnd(OutFlag->SOFlag);
+				InFlag->SOFlag->AddToEndConnections(OutFlag->SOFlag);
 			}
 			if(InFlag->SOFlag->Segment.EndPosition == OutFlag->SOFlag->Segment.EndPosition)
 			{
-				InFlag->SOFlag->AddToEnd(OutFlag->SOFlag);
+				InFlag->SOFlag->AddToEndConnections(OutFlag->SOFlag);
 			}
 		}
 	}
@@ -74,9 +74,9 @@ TArray<FFlagSegment*> AFlagManager::GetSegments() const
 	return Segments;
 }
 
-TArray<AFlagActor*> AFlagManager::GetFlags() const
+TArray<AFlagActor*> AFlagManager::GetFlagActors() const
 {
-	return Flags;
+	return FlagActors;
 }
 
 

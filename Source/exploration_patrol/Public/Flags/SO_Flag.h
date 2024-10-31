@@ -33,12 +33,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void Test();
 	UFUNCTION()
-	void AddToBeginning(USO_Flag* FlagToconnect);
-	void AddToEnd(USO_Flag* FlagToconnect);
+	void AddToBeginConnections(USO_Flag* FlagToconnect);
+	void AddToEndConnections(USO_Flag* FlagToconnect);
 	UPROPERTY(BlueprintReadWrite)
-	TArray<USO_Flag*> ConnectedBeginning;
+	TArray<USO_Flag*> BeginPointConnections;
 	UPROPERTY(BlueprintReadWrite)
-	TArray<USO_Flag*> ConnectedEnd;
+	TArray<USO_Flag*> EndPointConnections;
 	UPROPERTY(BlueprintReadWrite)
 	EFlagType FlagType;
 	UPROPERTY(BlueprintReadWrite)

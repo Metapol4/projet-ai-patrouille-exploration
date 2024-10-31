@@ -15,12 +15,12 @@ void USO_Flag::Test()
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("I AM %s"), *GetName()));
 }
 
-void USO_Flag::AddToBeginning(USO_Flag* FlagToconnect)
+void USO_Flag::AddToBeginConnections(USO_Flag* FlagToconnect)
 {
-	ConnectedBeginning.Add(FlagToconnect);
+	BeginPointConnections.Add(FlagToconnect);
 }
 
-void USO_Flag::AddToEnd(USO_Flag* FlagToconnect)
+void USO_Flag::AddToEndConnections(USO_Flag* FlagToconnect)
 {
-	ConnectedEnd.Add(FlagToconnect);
+	EndPointConnections.Add(FlagToconnect);
 }
