@@ -17,8 +17,8 @@ ADebugBillboardText::ADebugBillboardText()
 	// Set up text properties
 	TextComponent->SetHorizontalAlignment(EHTA_Center);
 	TextComponent->SetVerticalAlignment(EVRTA_TextCenter);
-	TextComponent->SetTextRenderColor(FColor::Red);
-	TextComponent->SetWorldSize(50.0f); // Adjust to your preference
+	TextComponent->SetTextRenderColor(FColor::Black);
+	TextComponent->SetWorldSize(100.0f); // Adjust to your preference
 	TextComponent->SetText(FText::FromString("Debug Text Here"));
 	UMaterial* mat = ConstructorHelpers::FObjectFinder<UMaterial>(TEXT("Material'/Game/Flags/BillboardText'")).
 		Object;
