@@ -52,7 +52,7 @@ void AFlagManager::LinkFlags()
 	{
 		for (AFlagActor* OutFlag : FlagActors)
 		{
-			if(InFlag == OutFlag)
+			if (InFlag == OutFlag)
 				continue;
 			//begin
 			if (UE::Geometry::Distance(InFlag->SOFlag->Segment.BeginPosition, OutFlag->SOFlag->Segment.BeginPosition) <
@@ -107,4 +107,93 @@ void AFlagManager::TestSegmentBatch()
 	{
 		
 	}*/
+}
+
+void AFlagManager::CalculateVisionGroups()
+{
+	if (FlagActors.Num() <= 0)
+		return;
+	int MaxVisionTarget = 0;
+	int CurrentVisionTarget = 0;
+	AFlagActor* Pivot = FlagActors[0];
+	CurrentVisionTarget++;
+	Pivot->AddToVisibilityGroup(CurrentVisionTarget);
+	// FIXME: please this sucks
+	TArray<AFlagActor*> VisGroupZero;
+	TArray<AFlagActor*> VisGroupOne;
+	VisGroupOne.Add(Pivot);
+	VisionGroups.Add(VisGroupZero);
+	VisionGroups.Add(VisGroupOne);
+	AFlagActor* Suspect = nullptr;
+
+	while (CurrentVisionTarget != 0)
+	{
+		for (AFlagActor* Flag : FlagActors)
+		{
+			bool validTarget = true;
+			for (int Group : Pivot->SOFlag->Segment.VisibilityGroups)
+			{
+				if (VisionGroups[Group].Contains(Flag))
+				{
+					validTarget = false;
+					break;
+				}
+			}
+			if (validTarget)
+			{
+				FHitResult Hit;
+				FVector TraceStart = Pivot->GetActorLocation();
+				FVector TraceEnd = Flag->GetActorLocation();
+
+				FCollisionQueryParams QueryParams;
+				QueryParams.AddIgnoredActor(Pivot);
+
+				bool HasHitParent = GetWorld()->LineTraceSingleByChannel(
+					Hit, TraceStart, TraceEnd, TraceChannelProperty,
+					QueryParams);
+
+				if (!HasHitParent)
+				{
+					bool HasHitOneChild = false;
+					for (AFlagActor* FlagInGroup : VisionGroups[CurrentVisionTarget])
+					{
+						TraceStart = FlagInGroup->GetActorLocation();
+						// trace end is the same
+						FCollisionQueryParams ChildQueryParams;
+						ChildQueryParams.AddIgnoredActor(FlagInGroup);
+						HasHitOneChild = GetWorld()->LineTraceSingleByChannel(
+							Hit, TraceStart, TraceEnd, TraceChannelProperty,
+							ChildQueryParams);
+					}
+					if (!HasHitOneChild)
+					{
+						Flag->AddToVisibilityGroup(CurrentVisionTarget);
+						VisionGroups[CurrentVisionTarget].Add(Flag);
+					}
+					else
+					{
+						Suspect = Flag;
+					}
+				}
+			}
+		}
+		if (Suspect != nullptr)
+		{
+			CurrentVisionTarget++;
+			Suspect->AddToVisibilityGroup(CurrentVisionTarget);
+			TArray<AFlagActor*> NextVisGroup;
+			NextVisGroup.Add(Suspect);
+			VisionGroups.Add(NextVisGroup);
+			Pivot = Suspect;
+			Suspect = nullptr;
+		}
+		else
+		{
+			CurrentVisionTarget--;
+			if (CurrentVisionTarget > 0)
+				Pivot = VisionGroups[CurrentVisionTarget][0]; //TODO: CHECK IF CRASH
+		}
+	}
+	if (GEngine)
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("for")));
 }

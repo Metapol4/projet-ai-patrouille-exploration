@@ -33,11 +33,13 @@ public:
 
 	TArray<FFlagSegment> FlagSegments;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Flags)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=FlagManager)
 	AFlagManager* FlagManager;
 
-	UFUNCTION(CallInEditor, BlueprintCallable, Category=Flags)
+	UFUNCTION(CallInEditor, BlueprintCallable, Category=FlagManager)
 	void SendFlagBatch();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category=FlagManager)
+	void CalculateVisionGroups();
 
 	bool NavPoly_GetAllPolys(TArray<NavNodeRef>& Polys);
 	bool TileIsValid(const ARecastNavMesh* Navmesh, int32 TileIndex) const;

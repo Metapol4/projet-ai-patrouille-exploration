@@ -21,7 +21,7 @@ struct FFlagSegment
 	UPROPERTY(EditAnywhere)
 	EFlagDirection Direction; // could also be a vector ? this seems more practical tho
 	UPROPERTY(EditAnywhere)
-	int VisibilityGroup = 0;
+	TArray<int> VisibilityGroups;
 };
 
 UCLASS()

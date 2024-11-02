@@ -11,6 +11,11 @@ void ASkeletalNavMeshBoundsVolume::SendFlagBatch()
 		FlagManager->ReceiveSegmentBatch(FlagSegments);
 }
 
+void ASkeletalNavMeshBoundsVolume::CalculateVisionGroups()
+{
+	FlagManager->CalculateVisionGroups();
+}
+
 bool ASkeletalNavMeshBoundsVolume::NavPoly_GetAllPolys(TArray<NavNodeRef>& Polys)
 {
 	if (!NavMesh) return false;
