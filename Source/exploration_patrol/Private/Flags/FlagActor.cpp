@@ -44,13 +44,12 @@ void AFlagActor::DrawDebugSegmentFlag()
 	VisibilityGroupText = GetWorld()->SpawnActor<ADebugBillboardText>(ADebugBillboardText::StaticClass(),
 	                                                                  GetActorLocation() + FVector(0, 0, 50),
 	                                                                  FRotator::ZeroRotator);
-	VisibilityGroupText->SetText("0"); // TODO: VISIBILITY NUMBER HERE
 }
 
 void AFlagActor::AddToVisibilityGroup(int Group,bool UpdateText)
 {
 	SOFlag->Segment.VisibilityGroups.Add(Group);
 	if(UpdateText)
-		VisibilityGroupText->SetText(FString::FromInt(Group));
+		VisibilityGroupText->AddText(FString::FromInt(Group));
 
 }

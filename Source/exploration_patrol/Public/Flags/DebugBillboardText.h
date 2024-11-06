@@ -29,5 +29,6 @@ public:
 	UTextRenderComponent* TextComponent;
 
 	void SetText(FString Text);
+	void AddText(FString Text);
 
 };
