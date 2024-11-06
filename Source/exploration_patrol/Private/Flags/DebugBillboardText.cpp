@@ -49,5 +49,5 @@ void ADebugBillboardText::AddText(FString Text)
 	if (Current.IsEmpty())
 		SetText(Text);
 	else
-		SetText(Current + ", " + Text);
+		SetText(Current + "-" + Text);
 }
