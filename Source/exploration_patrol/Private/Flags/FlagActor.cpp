@@ -14,7 +14,6 @@ AFlagActor::AFlagActor()
 
 	UStaticMesh* cubeMesh = ConstructorHelpers::FObjectFinder<UStaticMesh>(
 		TEXT("StaticMesh'/Engine/BasicShapes/Cube.Cube'")).Object;
-
 	cubeMeshComponent->SetStaticMesh(cubeMesh);
 
 	cubeMeshComponent->SetWorldScale3D(FVector(0.25f, 0.25f, 0.25f));
@@ -44,6 +43,7 @@ void AFlagActor::DrawDebugSegmentFlag()
 	VisibilityGroupText = GetWorld()->SpawnActor<ADebugBillboardText>(ADebugBillboardText::StaticClass(),
 	                                                                  GetActorLocation() + FVector(0, 0, 50),
 	                                                                  FRotator::ZeroRotator);
+	
 }
 
 void AFlagActor::AddToVisibilityGroup(int Group,bool UpdateText)

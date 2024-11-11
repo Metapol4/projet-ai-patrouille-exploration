@@ -49,7 +49,7 @@ bool ASkeletalNavMeshBoundsVolume::TileIsValid(const ARecastNavMesh* Navmesh, in
 void ASkeletalNavMeshBoundsVolume::BeginPlay()
 {
 	Super::BeginPlay();
-
+	int CurrentID = 0;
 	if (!NavMesh) return;
 	if (!StartPoint) return;
 	if (!EndPoint) return;
@@ -81,6 +81,8 @@ void ASkeletalNavMeshBoundsVolume::BeginPlay()
 				for (auto Neighbor : Neighbors)
 				{
 					FFlagSegment CurrentSegment;
+					CurrentSegment.id = CurrentID;
+					CurrentID++;
 					CurrentSegment.BeginPosition = BeginLocation;
 
 					NavMesh->GetPolyCenter(Neighbor, EndLineLocation);
@@ -113,6 +115,8 @@ void ASkeletalNavMeshBoundsVolume::BeginPlay()
 				for (auto Neighbor : Neighbors)
 				{
 					FFlagSegment CurrentSegment;
+					CurrentSegment.id = CurrentID;
+					CurrentID++;
 					CurrentSegment.BeginPosition = BeginLocation;
 					NavMesh->GetPolyCenter(Neighbor, EndLineLocation);
 					float ChildrenNodeDistance = UE::Geometry::Distance(EndPoint->GetActorLocation(), EndLineLocation);

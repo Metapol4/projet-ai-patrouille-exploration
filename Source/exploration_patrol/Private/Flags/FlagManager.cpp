@@ -111,25 +111,38 @@ void AFlagManager::TestSegmentBatch()
 
 void AFlagManager::CalculateVisionGroups()
 {
+	// Security For EmptyList
 	if (FlagActors.Num() <= 0)
 		return;
-	int MaxVisionTarget = 0;
+
+	// Declare internal variable
 	int CurrentVisionTarget = 0;
+	int LastSuspectVisionGroup = 0;
 	AFlagActor* Pivot = FlagActors[0];
+
+	//Start Logic at 1
 	CurrentVisionTarget++;
 	Pivot->AddToVisibilityGroup(CurrentVisionTarget);
-	// FIXME: please this sucks
+	
+	// FIXME: Void VisGroup to skip index 0
 	TArray<AFlagActor*> VisGroupZero;
+	VisionGroups.Add(VisGroupZero);
+
+	// Create first vision group at index 1
 	TArray<AFlagActor*> VisGroupOne;
 	VisGroupOne.Add(Pivot);
-	VisionGroups.Add(VisGroupZero);
 	VisionGroups.Add(VisGroupOne);
+
+	// Init suspect flag for next vision group
 	AFlagActor* Suspect = nullptr;
 
-	while (CurrentVisionTarget != 0)
+	while (CurrentVisionTarget != 0 && CurrentVisionTarget <= 20)
 	{
+		
+		//Constitute a COMPLETE vision group (no more node can be added to it)
 		for (AFlagActor* Flag : FlagActors)
 		{
+			// Security to ensure not already in group
 			bool validTarget = true;
 			for (int Group : Pivot->SOFlag->Segment.VisibilityGroups)
 			{
@@ -138,7 +151,14 @@ void AFlagManager::CalculateVisionGroups()
 					validTarget = false;
 					break;
 				}
+				if (Flag->SOFlag->Segment.VisibilityGroups.Num() > 3)
+				{
+					validTarget = false;
+					break;
+				}
 			}
+
+			// Trace toward evaluated flag
 			if (validTarget)
 			{
 				FHitResult Hit;
@@ -152,34 +172,46 @@ void AFlagManager::CalculateVisionGroups()
 					Hit, TraceStart, TraceEnd, TraceChannelProperty,
 					QueryParams);
 
+				// Case : DIRECT LINE OF SIGHT WITH PIVOT
 				if (!HasHitParent)
 				{
-					bool HasHitOneChild = false;
+					// Trace from all child
+					bool NoClearVisionPath;
+					int NbOfChildHidden = 0;
 					for (AFlagActor* FlagInGroup : VisionGroups[CurrentVisionTarget])
 					{
 						TraceStart = FlagInGroup->GetActorLocation();
 						// trace end is the same
 						FCollisionQueryParams ChildQueryParams;
 						ChildQueryParams.AddIgnoredActor(FlagInGroup);
-						HasHitOneChild = GetWorld()->LineTraceSingleByChannel(
+						NoClearVisionPath = GetWorld()->LineTraceSingleByChannel(
 							Hit, TraceStart, TraceEnd, TraceChannelProperty,
 							ChildQueryParams);
+						if (NoClearVisionPath)
+							NbOfChildHidden++;
 					}
-					if (!HasHitOneChild)
+					// Case : Vision with all member of group -> Condition satisfied
+					if (NbOfChildHidden == 0)
 					{
 						Flag->AddToVisibilityGroup(CurrentVisionTarget);
 						VisionGroups[CurrentVisionTarget].Add(Flag);
 					}
+					// Case : At least one child hit -> At least one more vision group exist
 					else
 					{
 						Suspect = Flag;
+						LastSuspectVisionGroup = CurrentVisionTarget;
 					}
 				}
 			}
 		}
+		UE_LOG(LogTemp, Warning, TEXT("FLAG : Node in VG = %d"), VisionGroups[CurrentVisionTarget].Num());
+		// Case : another vision group need to be formed
 		if (Suspect != nullptr)
 		{
-			CurrentVisionTarget++;
+			//CurrentVisionTarget++;
+			UE_LOG(LogTemp, Warning, TEXT("FLAG : VG from %d to %d"), CurrentVisionTarget, VisionGroups.Num());
+			CurrentVisionTarget = VisionGroups.Num();
 			Suspect->AddToVisibilityGroup(CurrentVisionTarget);
 			TArray<AFlagActor*> NextVisGroup;
 			NextVisGroup.Add(Suspect);
@@ -189,11 +221,20 @@ void AFlagManager::CalculateVisionGroups()
 		}
 		else
 		{
-			CurrentVisionTarget--;
+			if (CurrentVisionTarget == LastSuspectVisionGroup)
+			{
+				LastSuspectVisionGroup--;
+				UE_LOG(LogTemp, Warning, TEXT("FLAG : VG from %d to %d"), CurrentVisionTarget, LastSuspectVisionGroup);
+				CurrentVisionTarget--;
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("FLAG : VG from %d to %d"), CurrentVisionTarget, LastSuspectVisionGroup);
+				CurrentVisionTarget = LastSuspectVisionGroup;
+			}
+			
 			if (CurrentVisionTarget > 0)
 				Pivot = VisionGroups[CurrentVisionTarget][0]; //TODO: CHECK IF CRASH
 		}
 	}
-	if (GEngine)
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("for")));
 }
