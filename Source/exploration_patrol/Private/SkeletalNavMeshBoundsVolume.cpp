@@ -86,15 +86,6 @@ void ASkeletalNavMeshBoundsVolume::CalculateVisionGroups()
 	FlagManager->CalculateVisionGroups();
 }
 
-void ASkeletalNavMeshBoundsVolume::RefreshDebugVisionGroups()
-{
-	FlagManager->RefreshDebugVisionGroups(DebugVisionGroups);
-}
-
-void ASkeletalNavMeshBoundsVolume::ResetDebugVisionGroups()
-{
-	FlagManager->ResetDebugVisionGroups();
-}
 
 bool ASkeletalNavMeshBoundsVolume::NavPoly_GetAllPolys(TArray<NavNodeRef>& Polys)
 {

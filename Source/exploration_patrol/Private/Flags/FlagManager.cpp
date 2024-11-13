@@ -99,42 +99,6 @@ void AFlagManager::ReceiveSegmentBatch(const TArray<FFlagSegment>& SegmentBatch)
 	LinkFlags();
 }
 
-void AFlagManager::RefreshDebugVisionGroups(TArray<int> VisGroups)
-{
-	if (VisGroups.Num() <= 0)
-		return;
-
-	for (TArray<AFlagActor*> VisGroup : VisionGroups)
-	{
-		for (AFlagActor* ActorInGroup : VisGroup)
-		{
-			if (ActorInGroup)
-				ActorInGroup->HideSelfAndText();
-		}
-	}
-	for (int Group : VisGroups)
-	{
-		if(VisionGroups.Num() <= Group || Group < 0)
-			continue;
-
-		for (AFlagActor* ActorInGroup : VisionGroups[Group])
-		{
-			ActorInGroup->ShowSelfAndText();
-		}
-	}
-}
-
-void AFlagManager::ResetDebugVisionGroups()
-{
-	for (TArray<AFlagActor*> VisGroup : VisionGroups)
-	{
-		for (AFlagActor* ActorInGroup : VisGroup)
-		{
-			if (ActorInGroup)
-				ActorInGroup->ShowSelfAndText();
-		}
-	}
-}
 
 void AFlagManager::CalculateVisionGroups()
 {
