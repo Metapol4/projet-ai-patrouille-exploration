@@ -32,4 +32,6 @@ public:
 	void AddToVisibilityGroup(int Group,bool UpdateText = true);
 	void ShowSelfAndText();
 	void HideSelfAndText();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category=DebugVisionGroup)
+	void ShowOwnVisionGroup();
 };
