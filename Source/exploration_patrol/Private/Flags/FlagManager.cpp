@@ -99,14 +99,41 @@ void AFlagManager::ReceiveSegmentBatch(const TArray<FFlagSegment>& SegmentBatch)
 	LinkFlags();
 }
 
-void AFlagManager::TestSegmentBatch()
+void AFlagManager::RefreshDebugVisionGroups(TArray<int> VisGroups)
 {
-	/*TArray<AActor*> TestSubjects;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), Aexploration_patrolCharacter::StaticClass(), TestSubjects);
-	for (AActor* TestSubject : TestSubjects)
+	if (VisGroups.Num() <= 0)
+		return;
+
+	for (TArray<AFlagActor*> VisGroup : VisionGroups)
 	{
-		
-	}*/
+		for (AFlagActor* ActorInGroup : VisGroup)
+		{
+			if (ActorInGroup)
+				ActorInGroup->HideSelfAndText();
+		}
+	}
+	for (int Group : VisGroups)
+	{
+		if(VisionGroups.Num() <= Group || Group < 0)
+			continue;
+
+		for (AFlagActor* ActorInGroup : VisionGroups[Group])
+		{
+			ActorInGroup->ShowSelfAndText();
+		}
+	}
+}
+
+void AFlagManager::ResetDebugVisionGroups()
+{
+	for (TArray<AFlagActor*> VisGroup : VisionGroups)
+	{
+		for (AFlagActor* ActorInGroup : VisGroup)
+		{
+			if (ActorInGroup)
+				ActorInGroup->ShowSelfAndText();
+		}
+	}
 }
 
 void AFlagManager::CalculateVisionGroups()
@@ -123,7 +150,7 @@ void AFlagManager::CalculateVisionGroups()
 	//Start Logic at 1
 	CurrentVisionTarget++;
 	Pivot->AddToVisibilityGroup(CurrentVisionTarget);
-	
+
 	// FIXME: Void VisGroup to skip index 0
 	TArray<AFlagActor*> VisGroupZero;
 	VisionGroups.Add(VisGroupZero);
@@ -138,7 +165,6 @@ void AFlagManager::CalculateVisionGroups()
 
 	while (CurrentVisionTarget != 0 && CurrentVisionTarget <= 20)
 	{
-		
 		//Constitute a COMPLETE vision group (no more node can be added to it)
 		for (AFlagActor* Flag : FlagActors)
 		{
@@ -232,7 +258,7 @@ void AFlagManager::CalculateVisionGroups()
 				UE_LOG(LogTemp, Warning, TEXT("FLAG : VG from %d to %d"), CurrentVisionTarget, LastSuspectVisionGroup);
 				CurrentVisionTarget = LastSuspectVisionGroup;
 			}
-			
+
 			if (CurrentVisionTarget > 0)
 				Pivot = VisionGroups[CurrentVisionTarget][0]; //TODO: CHECK IF CRASH
 		}

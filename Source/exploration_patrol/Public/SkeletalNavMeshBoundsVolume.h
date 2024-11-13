@@ -40,6 +40,12 @@ public:
 	void SendFlagBatch();
 	UFUNCTION(CallInEditor, BlueprintCallable, Category=FlagManager)
 	void CalculateVisionGroups();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category=DebugVisionGroup)
+	void RefreshDebugVisionGroups();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category=DebugVisionGroup)
+	void ResetDebugVisionGroups();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=DebugVisionGroup)
+	TArray<int> DebugVisionGroups;
 
 	bool NavPoly_GetAllPolys(TArray<NavNodeRef>& Polys);
 	bool TileIsValid(const ARecastNavMesh* Navmesh, int32 TileIndex) const;

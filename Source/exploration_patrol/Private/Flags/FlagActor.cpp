@@ -4,6 +4,8 @@
 #include "Flags/FlagActor.h"
 
 #include "Components/TextRenderComponent.h"
+#include "Flags/FlagManager.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AFlagActor::AFlagActor()
@@ -52,4 +54,22 @@ void AFlagActor::AddToVisibilityGroup(int Group,bool UpdateText)
 	if(UpdateText)
 		VisibilityGroupText->AddText(FString::FromInt(Group));
 
+}
+
+void AFlagActor::ShowSelfAndText()
+{
+	SetIsTemporarilyHiddenInEditor(false);
+	VisibilityGroupText->SetIsTemporarilyHiddenInEditor(false);
+}
+
+void AFlagActor::HideSelfAndText()
+{
+	SetIsTemporarilyHiddenInEditor(true);
+	VisibilityGroupText->SetIsTemporarilyHiddenInEditor(true);
+}
+
+void AFlagActor::ShowOwnVisionGroup()
+{
+	AFlagManager* FlagManager = Cast<AFlagManager>(UGameplayStatics::GetActorOfClass(GetWorld(), AFlagManager::StaticClass()));
+	FlagManager->RefreshDebugVisionGroups(SOFlag->Segment.VisibilityGroups);
 }
