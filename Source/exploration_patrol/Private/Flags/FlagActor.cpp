@@ -4,6 +4,8 @@
 #include "Flags/FlagActor.h"
 
 #include "Components/TextRenderComponent.h"
+#include "Flags/FlagManager.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AFlagActor::AFlagActor()
@@ -52,4 +54,11 @@ void AFlagActor::AddToVisibilityGroup(int Group,bool UpdateText)
 	if(UpdateText)
 		VisibilityGroupText->AddText(FString::FromInt(Group));
 
+}
+
+void AFlagActor::SeeVisionGroup()
+{
+	auto manager = UGameplayStatics::GetActorOfClass(GetWorld(),AFlagManager::StaticClass());
+	AFlagManager* FlagManager = Cast<AFlagManager>(manager);
+	FlagManager->ShowVisionGroupForActor(SOFlag->Segment.id);
 }

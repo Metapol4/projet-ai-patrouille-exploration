@@ -20,28 +20,41 @@ class EXPLORATION_PATROL_API ASkeletalNavMeshBoundsVolume : public ANavMeshBound
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, Category=RecastNavMesh)
-	ARecastNavMesh* NavMesh;
-
-	UPROPERTY(EditAnywhere, Category=RecastNavMesh)
-	AActor* StartPoint;
-
-	UPROPERTY(EditAnywhere, Category=RecastNavMesh)
-	AActor* EndPoint;
 
 	TArray<NavNodeRef> PolyArray;
 
 	TArray<FFlagSegment> FlagSegments;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=FlagManager)
-	AFlagManager* FlagManager;
+	// Editor Helper
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Debugs")
+	bool DNodes;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Debugs")
+	bool DSegments;
 
-	UFUNCTION(CallInEditor, BlueprintCallable, Category=FlagManager)
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	void ClearDebugLine();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	void ComputeGeometry();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
 	void SendFlagBatch();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category=FlagManager)
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
 	void CalculateVisionGroups();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="01ControlPanel")
+	AFlagManager* FlagManager;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="02GeometryReference")
+	ARecastNavMesh* NavMesh;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="02GeometryReference")
+	AActor* StartPoint;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="02GeometryReference")
+	AActor* EndPoint;
+	
 
 	bool NavPoly_GetAllPolys(TArray<NavNodeRef>& Polys);
 	bool TileIsValid(const ARecastNavMesh* Navmesh, int32 TileIndex) const;
 	virtual void BeginPlay() override;
+
+private:
+	bool TestDirectionnality(FVector StartLocation, FVector EndLocation);
 };

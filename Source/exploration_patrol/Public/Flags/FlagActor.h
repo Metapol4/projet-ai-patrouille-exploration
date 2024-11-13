@@ -30,4 +30,6 @@ public:
 	ADebugBillboardText* VisibilityGroupText;
 	void DrawDebugSegmentFlag();
 	void AddToVisibilityGroup(int Group,bool UpdateText = true);
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	void SeeVisionGroup();
 };
