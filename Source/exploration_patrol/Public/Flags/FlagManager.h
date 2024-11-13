@@ -20,8 +20,12 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	//Liste de tous les segments (le id correspond à l'index)
 	TArray<FFlagSegment> Segments;
+	//Liste des flags actors liés aux segments (le id correspond à l'index)
 	TArray<AFlagActor*> FlagActors;
+	
 	UFUNCTION()
 	void CreateFlagsFromSegments();
 	UFUNCTION()
@@ -32,12 +36,16 @@ public:
 	TArray<TArray<AFlagActor*>> VisionGroups;
 	TArray<FFlagSegment> GetSegments() const;
 	TArray<AFlagActor*> GetFlagActors() const;
-	void RefreshDebugVisionGroups(TArray<int> VisGroups);
-	void ResetDebugVisionGroups();
 	void ReceiveSegmentBatch(const TArray<FFlagSegment>& SegmentBatch);
 	int CurrentId;
 	UFUNCTION()
 	void CalculateVisionGroups();
+	UFUNCTION()
+	void OldCalculateVisionGroups();
+	UFUNCTION()
+	void NewCalculateIndividualVisionGroups();
+	UFUNCTION()
+	void ShowVisionGroupForActor(int id);
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Collision")
 	TEnumAsByte<ECollisionChannel> TraceChannelProperty = ECC_Pawn;
 };

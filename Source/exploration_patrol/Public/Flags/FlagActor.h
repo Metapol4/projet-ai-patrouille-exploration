@@ -30,8 +30,6 @@ public:
 	ADebugBillboardText* VisibilityGroupText;
 	void DrawDebugSegmentFlag();
 	void AddToVisibilityGroup(int Group,bool UpdateText = true);
-	void ShowSelfAndText();
-	void HideSelfAndText();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category=DebugVisionGroup)
-	void ShowOwnVisionGroup();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	void SeeVisionGroup();
 };

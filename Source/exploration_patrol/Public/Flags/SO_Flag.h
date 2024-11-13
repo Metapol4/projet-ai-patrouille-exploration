@@ -13,7 +13,7 @@ struct FFlagSegment
 {
 	GENERATED_BODY()
 	UPROPERTY(EditAnywhere)
-	uint8 id; // is this useful?
+	uint8 id;
 	UPROPERTY(EditAnywhere)
 	FVector BeginPosition;
 	UPROPERTY(EditAnywhere)
@@ -22,6 +22,10 @@ struct FFlagSegment
 	EFlagDirection Direction; // could also be a vector ? this seems more practical tho
 	UPROPERTY(EditAnywhere)
 	TArray<int> VisibilityGroups;
+	UPROPERTY(EditAnywhere)
+	EFlagType FlagType = EFlagType::NONE;
+	UPROPERTY(EditAnywhere)
+	EFlagPathType PathType = EFlagPathType::NONE;
 };
 
 UCLASS()

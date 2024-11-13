@@ -99,44 +99,15 @@ void AFlagManager::ReceiveSegmentBatch(const TArray<FFlagSegment>& SegmentBatch)
 	LinkFlags();
 }
 
-void AFlagManager::RefreshDebugVisionGroups(TArray<int> VisGroups)
-{
-	if (VisGroups.Num() <= 0)
-		return;
-
-	for (TArray<AFlagActor*> VisGroup : VisionGroups)
-	{
-		for (AFlagActor* ActorInGroup : VisGroup)
-		{
-			if (ActorInGroup)
-				ActorInGroup->HideSelfAndText();
-		}
-	}
-	for (int Group : VisGroups)
-	{
-		if(VisionGroups.Num() <= Group || Group < 0)
-			continue;
-
-		for (AFlagActor* ActorInGroup : VisionGroups[Group])
-		{
-			ActorInGroup->ShowSelfAndText();
-		}
-	}
-}
-
-void AFlagManager::ResetDebugVisionGroups()
-{
-	for (TArray<AFlagActor*> VisGroup : VisionGroups)
-	{
-		for (AFlagActor* ActorInGroup : VisGroup)
-		{
-			if (ActorInGroup)
-				ActorInGroup->ShowSelfAndText();
-		}
-	}
-}
 
 void AFlagManager::CalculateVisionGroups()
+{
+	//OldCalculateVisionGroups();
+	NewCalculateIndividualVisionGroups();
+}
+
+
+void AFlagManager::OldCalculateVisionGroups()
 {
 	// Security For EmptyList
 	if (FlagActors.Num() <= 0)
@@ -262,5 +233,68 @@ void AFlagManager::CalculateVisionGroups()
 			if (CurrentVisionTarget > 0)
 				Pivot = VisionGroups[CurrentVisionTarget][0]; //TODO: CHECK IF CRASH
 		}
+	}
+}
+
+void AFlagManager::NewCalculateIndividualVisionGroups()
+{
+	for (int i = 0; i < FlagActors.Num(); i++)
+	{
+		for (int j = i; j < FlagActors.Num(); j++)
+		{
+			FHitResult Hit;
+			FVector TraceStart = FlagActors[i]->GetActorLocation();
+			FVector TraceEnd = FlagActors[j]->GetActorLocation();
+
+			FCollisionQueryParams QueryParams;
+			QueryParams.AddIgnoredActor(FlagActors[i]);
+
+			bool HasHitSomething = GetWorld()->LineTraceSingleByChannel(
+				Hit, TraceStart, TraceEnd, TraceChannelProperty,
+				QueryParams);
+
+			if (!HasHitSomething)
+			{
+				FlagActors[i]->AddToVisibilityGroup(j, false);
+				FlagActors[j]->AddToVisibilityGroup(i, false);
+;			}
+		}
+	}
+}
+
+void AFlagManager::ShowVisionGroupForActor(int id)
+{
+	FlushPersistentDebugLines(GetWorld());
+	AFlagActor* flag = FlagActors[id];
+	DrawDebugSphere(
+				GetWorld(),
+				flag->GetActorLocation(),
+				50,
+				12,
+				FColor::Blue,
+				true,
+				300
+			);
+	for (auto FlagActor : FlagActors)
+	{
+		auto FlagSegment = FlagActor->SOFlag->Segment;
+		FVector BeginPoint = FlagSegment.BeginPosition;
+		FVector EndPoint = FlagSegment.EndPosition;
+		FVector AdjustedLocation = BeginPoint + (EndPoint - BeginPoint) * 0.9f;
+
+		FColor MainColor = FColor::Black;
+		if (flag->SOFlag->Segment.VisibilityGroups.Contains(FlagSegment.id))
+		{
+			MainColor = FColor::Yellow;
+		}
+		DrawDebugDirectionalArrow(
+				GetWorld(),
+				BeginPoint,
+				AdjustedLocation,
+				500,
+				MainColor,
+				true,
+				300
+			);
 	}
 }

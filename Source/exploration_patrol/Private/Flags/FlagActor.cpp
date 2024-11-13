@@ -56,20 +56,9 @@ void AFlagActor::AddToVisibilityGroup(int Group,bool UpdateText)
 
 }
 
-void AFlagActor::ShowSelfAndText()
+void AFlagActor::SeeVisionGroup()
 {
-	SetIsTemporarilyHiddenInEditor(false);
-	VisibilityGroupText->SetIsTemporarilyHiddenInEditor(false);
-}
-
-void AFlagActor::HideSelfAndText()
-{
-	SetIsTemporarilyHiddenInEditor(true);
-	VisibilityGroupText->SetIsTemporarilyHiddenInEditor(true);
-}
-
-void AFlagActor::ShowOwnVisionGroup()
-{
-	AFlagManager* FlagManager = Cast<AFlagManager>(UGameplayStatics::GetActorOfClass(GetWorld(), AFlagManager::StaticClass()));
-	FlagManager->RefreshDebugVisionGroups(SOFlag->Segment.VisibilityGroups);
+	auto manager = UGameplayStatics::GetActorOfClass(GetWorld(),AFlagManager::StaticClass());
+	AFlagManager* FlagManager = Cast<AFlagManager>(manager);
+	FlagManager->ShowVisionGroupForActor(SOFlag->Segment.id);
 }
