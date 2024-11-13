@@ -53,3 +53,15 @@ void AFlagActor::AddToVisibilityGroup(int Group,bool UpdateText)
 		VisibilityGroupText->AddText(FString::FromInt(Group));
 
 }
+
+void AFlagActor::ShowSelfAndText()
+{
+	SetIsTemporarilyHiddenInEditor(false);
+	VisibilityGroupText->SetIsTemporarilyHiddenInEditor(false);
+}
+
+void AFlagActor::HideSelfAndText()
+{
+	SetIsTemporarilyHiddenInEditor(true);
+	VisibilityGroupText->SetIsTemporarilyHiddenInEditor(true);
+}

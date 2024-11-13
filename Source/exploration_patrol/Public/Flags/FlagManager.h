@@ -32,9 +32,9 @@ public:
 	TArray<TArray<AFlagActor*>> VisionGroups;
 	TArray<FFlagSegment> GetSegments() const;
 	TArray<AFlagActor*> GetFlagActors() const;
+	void RefreshDebugVisionGroups(TArray<int> VisGroups);
+	void ResetDebugVisionGroups();
 	void ReceiveSegmentBatch(const TArray<FFlagSegment>& SegmentBatch);
-	UFUNCTION(CallInEditor, BlueprintCallable)
-	void TestSegmentBatch();
 	int CurrentId;
 	UFUNCTION()
 	void CalculateVisionGroups();
