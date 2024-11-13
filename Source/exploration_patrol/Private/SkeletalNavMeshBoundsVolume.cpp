@@ -17,6 +17,7 @@ void ASkeletalNavMeshBoundsVolume::ComputeGeometry()
 	if (!NavMesh) return;
 	if (!StartPoint) return;
 	if (!EndPoint) return;
+	FlagSegments.Empty();
 
 	NavPoly_GetAllPolys(PolyArray);
 	for (NavNodeRef Polys : PolyArray)

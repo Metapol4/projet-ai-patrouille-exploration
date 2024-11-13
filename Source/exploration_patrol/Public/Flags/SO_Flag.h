@@ -22,6 +22,10 @@ struct FFlagSegment
 	EFlagDirection Direction; // could also be a vector ? this seems more practical tho
 	UPROPERTY(EditAnywhere)
 	TArray<int> VisibilityGroups;
+	UPROPERTY(EditAnywhere)
+	EFlagType FlagType = EFlagType::NONE;
+	UPROPERTY(EditAnywhere)
+	EFlagPathType PathType = EFlagPathType::NONE;
 };
 
 UCLASS()

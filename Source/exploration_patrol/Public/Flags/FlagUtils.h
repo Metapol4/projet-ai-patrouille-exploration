@@ -8,7 +8,13 @@ enum class EFlagType : uint8
 	NONE,
 	SAFE,
 	RISKY,
-	CHALLENGE,
+	CHALLENGE
+};
+UENUM(BlueprintType)
+enum class EFlagPathType : uint8
+{
+	NONE,
+	GOLDEN,
 	ALTERNATIVE
 };
 UENUM(BlueprintType)
