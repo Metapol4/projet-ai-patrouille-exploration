@@ -49,7 +49,6 @@ public:
 	AActor* StartPoint;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="02GeometryReference")
 	AActor* EndPoint;
-	
 
 	bool NavPoly_GetAllPolys(TArray<NavNodeRef>& Polys);
 	bool TileIsValid(const ARecastNavMesh* Navmesh, int32 TileIndex) const;
