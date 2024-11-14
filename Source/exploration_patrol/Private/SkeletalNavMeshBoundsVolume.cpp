@@ -214,20 +214,28 @@ void ASkeletalNavMeshBoundsVolume::FindGoldenPath()
 		Divider++;
 	}
 
-	if (DGoldenPath)
+	GoldenPath = BestPathFound;
+	
+	for (AFlagActor* FlagActor : FlagManager->GetFlagActors())
 	{
-		for (auto FlagActor : FlagManager->GetFlagActors())
-		{
-			auto FlagSegment = FlagActor->SOFlag->Segment;
-			FVector BeginPoint = FlagSegment.BeginPosition;
-			FVector EndPoint = FlagSegment.EndPosition;
-			FVector AdjustedLocation = BeginPoint + (EndPoint - BeginPoint) * 0.9f;
+		auto FlagSegment = FlagActor->SOFlag->Segment;
+		FVector BeginPoint = FlagSegment.BeginPosition;
+		FVector EndPoint = FlagSegment.EndPosition;
+		FVector AdjustedLocation = BeginPoint + (EndPoint - BeginPoint) * 0.9f;
 
-			FColor MainColor = FColor::Black;
-			if (BestPathFound.Contains(FlagSegment.id))
-			{
-				MainColor = FColor::Green;
-			}
+		FColor MainColor = FColor::Black;
+		if (BestPathFound.Contains(FlagSegment.id))
+		{
+			MainColor = FColor::Green;
+			FlagActor->SOFlag->Segment.PathType = EFlagPathType::GOLDEN;
+				
+		}
+		else
+		{
+			FlagActor->SOFlag->Segment.PathType = EFlagPathType::ALTERNATIVE;
+		}
+		if (DGoldenPath)
+		{
 			DrawDebugDirectionalArrow(
 					GetWorld(),
 					BeginPoint,
@@ -238,9 +246,19 @@ void ASkeletalNavMeshBoundsVolume::FindGoldenPath()
 					300
 				);
 		}
+		else
+		{
+			DrawDebugDirectionalArrow(
+					GetWorld(),
+					BeginPoint,
+					AdjustedLocation,
+					500,
+					FColor::Red,
+					true,
+					300
+				);
+		}
 	}
-	
-	
 }
 
 //GEOMETRY FUNCTION
