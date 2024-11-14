@@ -26,3 +26,49 @@ void USO_Flag::AddToEndConnections(USO_Flag* FlagToconnect)
 	EndPointConnections.Add(FlagToconnect);
 	EndPointIds.Add(FlagToconnect->Segment.id);
 }
+
+int USO_Flag::IsTouchingFlagType(EFlagType FlagType, bool MustBeGolden)
+{
+	int NbOfSucceeds = 0;
+	for (USO_Flag* PointConnection : BeginPointConnections)
+	{
+		if (PointConnection->Segment.FlagType == FlagType)
+		{
+			if (!MustBeGolden)
+				NbOfSucceeds++;
+
+			else if (PointConnection->Segment.PathType == EFlagPathType::GOLDEN)
+				NbOfSucceeds++;
+		}
+	}
+
+	for (USO_Flag* PointConnection : EndPointConnections)
+	{
+		if (PointConnection->Segment.FlagType == FlagType)
+		{
+			if (!MustBeGolden)
+				NbOfSucceeds++;
+
+			if (PointConnection->Segment.PathType == EFlagPathType::GOLDEN)
+				NbOfSucceeds++;
+		}
+	}
+	return NbOfSucceeds;
+}
+
+int USO_Flag::IsTouchingPathType(EFlagPathType PathType)
+{
+	int NbOfSucceeds = 0;
+	for (USO_Flag* PointConnection : BeginPointConnections)
+	{
+		if (PointConnection->Segment.PathType == PathType)
+			NbOfSucceeds++;
+	}
+	for (USO_Flag* PointConnection : EndPointConnections)
+	{
+		if (PointConnection->Segment.PathType == PathType)
+			NbOfSucceeds++;
+	}
+
+	return NbOfSucceeds;
+}
