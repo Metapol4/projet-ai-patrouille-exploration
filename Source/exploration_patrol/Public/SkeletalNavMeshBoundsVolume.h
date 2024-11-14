@@ -14,6 +14,7 @@
 /**
  * 
  */
+
 UCLASS()
 class EXPLORATION_PATROL_API ASkeletalNavMeshBoundsVolume : public ANavMeshBoundsVolume
 {
@@ -24,6 +25,8 @@ public:
 	TArray<NavNodeRef> PolyArray;
 
 	TArray<FFlagSegment> FlagSegments;
+	TArray<int> GoldenPath;
+	int StartingFlagId, EndingFlagId;
 
 	// Editor Helper
 	
@@ -31,6 +34,8 @@ public:
 	bool DNodes;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Debugs")
 	bool DSegments;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Debugs")
+	bool DGoldenPath;
 
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
 	void ClearDebugLine();
@@ -40,15 +45,17 @@ public:
 	void SendFlagBatch();
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
 	void CalculateVisionGroups();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	void FindGoldenPath();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="01ControlPanel")
 	AFlagManager* FlagManager;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="02GeometryReference")
 	ARecastNavMesh* NavMesh;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="02GeometryReference")
-	AActor* StartPoint;
+	AActor* StartPointIndicator;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="02GeometryReference")
-	AActor* EndPoint;
+	AActor* EndPointIndicator;
 
 	bool NavPoly_GetAllPolys(TArray<NavNodeRef>& Polys);
 	bool TileIsValid(const ARecastNavMesh* Navmesh, int32 TileIndex) const;
@@ -56,4 +63,7 @@ public:
 
 private:
 	bool TestDirectionnality(FVector StartLocation, FVector EndLocation);
+	float AStarHeuristique(int FlagId, int GoalFlagId);
+	TArray<int> AStarAlgorithme();
+	TArray<int> AStarPathReconstructor(TArray<int> cameFrom, int Goal);
 };

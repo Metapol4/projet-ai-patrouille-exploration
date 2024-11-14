@@ -19,6 +19,8 @@ struct FFlagSegment
 	UPROPERTY(EditAnywhere)
 	FVector EndPosition;
 	UPROPERTY(EditAnywhere)
+	float Lenght;
+	UPROPERTY(EditAnywhere)
 	EFlagDirection Direction; // could also be a vector ? this seems more practical tho
 	UPROPERTY(EditAnywhere)
 	TArray<int> VisibilityGroups;

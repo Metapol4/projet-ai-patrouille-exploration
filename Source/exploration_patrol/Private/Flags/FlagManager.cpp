@@ -298,3 +298,21 @@ void AFlagManager::ShowVisionGroupForActor(int id)
 			);
 	}
 }
+
+AFlagActor* AFlagManager::GetFlagActor(int id)
+{
+	if (FlagActors.IsEmpty())
+	{
+		return nullptr;
+	}
+	return FlagActors[id]; 
+}
+
+int AFlagManager::GetFlagActorSize()
+{
+	if (FlagActors.IsEmpty())
+	{
+		return -1;
+	}
+	return FlagActors.Num();
+}

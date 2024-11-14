@@ -25,6 +25,8 @@ protected:
 	TArray<FFlagSegment> Segments;
 	//Liste des flags actors liés aux segments (le id correspond à l'index)
 	TArray<AFlagActor*> FlagActors;
+
+	int StartingFlagId, EndingFlagId;
 	
 	UFUNCTION()
 	void CreateFlagsFromSegments();
@@ -46,6 +48,10 @@ public:
 	void NewCalculateIndividualVisionGroups();
 	UFUNCTION()
 	void ShowVisionGroupForActor(int id);
+	UFUNCTION()
+	AFlagActor* GetFlagActor(int id);
+	UFUNCTION()
+	int GetFlagActorSize();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Collision")
 	TEnumAsByte<ECollisionChannel> TraceChannelProperty = ECC_Pawn;
 };
