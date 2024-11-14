@@ -48,6 +48,8 @@ public:
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
 	void FindGoldenPath();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="01ControlPanel")
+	float MinimumPathLenght = 4000;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="01ControlPanel")
 	AFlagManager* FlagManager;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="02GeometryReference")
@@ -64,6 +66,6 @@ public:
 private:
 	bool TestDirectionnality(FVector StartLocation, FVector EndLocation);
 	float AStarHeuristique(int FlagId, int GoalFlagId);
-	TArray<int> AStarAlgorithme();
-	TArray<int> AStarPathReconstructor(TArray<int> cameFrom, int Goal);
+	float AStarAlgorithme(int StartFlagID, int EndFlagID, TArray<int>& BestPath);
+	float AStarPathReconstructor(TArray<int> CameFrom, int Start, int Goal, TArray<int>& ReconstructedPath);
 };

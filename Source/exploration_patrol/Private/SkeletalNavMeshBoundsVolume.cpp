@@ -1,17 +1,19 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "SkeletalNavMeshBoundsVolume.h"
 
 #include "DataTypeUtils.h"
 #include "VectorTypes.h"
-#include "VectorUtil.h"
 
+void ASkeletalNavMeshBoundsVolume::BeginPlay()
+{
+	Super::BeginPlay();
+	ComputeGeometry();
+}
+
+//CONSOLE FUNCTION
 void ASkeletalNavMeshBoundsVolume::ClearDebugLine()
 {
 	FlushPersistentDebugLines(GetWorld());
 }
-
 void ASkeletalNavMeshBoundsVolume::ComputeGeometry()
 {
 	int CurrentID = 0;
@@ -76,20 +78,18 @@ void ASkeletalNavMeshBoundsVolume::ComputeGeometry()
 		}
 	}
 }
-
 void ASkeletalNavMeshBoundsVolume::SendFlagBatch()
 {
 	if (FlagManager)
 		FlagManager->ReceiveSegmentBatch(FlagSegments);
 }
-
 void ASkeletalNavMeshBoundsVolume::CalculateVisionGroups()
 {
 	FlagManager->CalculateVisionGroups();
 }
-
 void ASkeletalNavMeshBoundsVolume::FindGoldenPath()
 {
+	ClearDebugLine();
 	int NbOfFlag = FlagManager->GetFlagActorSize();
 	if (NbOfFlag == -1)
 		return;
@@ -135,9 +135,88 @@ void ASkeletalNavMeshBoundsVolume::FindGoldenPath()
 				300);
 	}
 
+	auto StartFlag = FlagManager->GetFlagActor(StartingFlagId);
+	auto EndFlag = FlagManager->GetFlagActor(EndingFlagId);
 	
-	auto BestPathFound = AStarAlgorithme();
-	for (auto FlagActor : FlagManager->GetFlagActors())
+	if(UE::Geometry::Distance(StartFlag->GetActorLocation(), EndFlag->GetActorLocation()) > MinimumPathLenght)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GP : MinimumPathLenght too short"))
+		return;
+	}
+	
+	int Divider = 1;
+	float CurrentLenght = 0;
+	TArray<int> BestPathFound;
+	TArray<int> ForcedFlagInPath;
+	
+
+	while (Divider < 5)
+	{
+		CurrentLenght = 0;
+		BestPathFound.Empty();
+		ForcedFlagInPath.Empty();
+
+		
+		ForcedFlagInPath.Add(StartingFlagId);
+		for (int i = 1; i < Divider; i++)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("GP : Segment Path in %d !"), Divider)
+			float SearchDistanceToLast = MinimumPathLenght / Divider;
+			float SearchDistanceToEnd = MinimumPathLenght * (Divider - i) / Divider;
+			UE_LOG(LogTemp, Warning, TEXT("GP : fisrt length %f !"), SearchDistanceToLast)
+			UE_LOG(LogTemp, Warning, TEXT("GP : second length %f !"), SearchDistanceToEnd)
+			
+			auto PrecedentFlagPosition = FlagManager->GetFlagActor(ForcedFlagInPath.Last())->GetActorLocation();
+			float BestCandidateScore = 999999;
+			int BestCandidate = ForcedFlagInPath.Last();
+			
+			for (int j = 0; j < NbOfFlag; j++)
+			{
+				auto EvaluatedFlagPosition = FlagManager->GetFlagActor(j)->GetActorLocation();
+				float EvaluatedDistanceToLast = UE::Geometry::Distance(PrecedentFlagPosition, EvaluatedFlagPosition);
+				float EvaluatedDistanceToEnd = UE::Geometry::Distance(EndFlag->GetActorLocation(), EvaluatedFlagPosition);
+				float EvaluatedCandidateScore = abs(EvaluatedDistanceToLast - SearchDistanceToLast) + abs(EvaluatedDistanceToEnd - SearchDistanceToEnd);
+				if (EvaluatedCandidateScore < BestCandidateScore)
+				{
+					BestCandidateScore = EvaluatedCandidateScore;
+					BestCandidate = j;
+				}
+			}
+			ForcedFlagInPath.Add(BestCandidate);
+			if (DGoldenPath)
+			{
+				DrawDebugSphere(
+					GetWorld(),
+					FlagManager->GetFlagActor(BestCandidate)->GetActorLocation(),
+					100,
+					12,
+					FColor::Blue,
+					true,
+					300);
+			}
+		}
+		ForcedFlagInPath.Add(EndingFlagId);
+
+		for (int j = 0; j < ForcedFlagInPath.Num() - 1; j++)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("GP : Add To BestPath !"))
+			TArray<int> PathSegmentFound;
+			CurrentLenght += AStarAlgorithme(ForcedFlagInPath[j], ForcedFlagInPath[j+1], PathSegmentFound);
+			BestPathFound.Append(PathSegmentFound);
+		}
+		UE_LOG(LogTemp, Warning, TEXT("GP : Current Path Lenght : %f"), CurrentLenght)
+		if (CurrentLenght > MinimumPathLenght)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("GP : Found Valid Path !"))
+			break;
+		}
+		
+		Divider++;
+	}
+
+	GoldenPath = BestPathFound;
+	
+	for (AFlagActor* FlagActor : FlagManager->GetFlagActors())
 	{
 		auto FlagSegment = FlagActor->SOFlag->Segment;
 		FVector BeginPoint = FlagSegment.BeginPosition;
@@ -148,64 +227,41 @@ void ASkeletalNavMeshBoundsVolume::FindGoldenPath()
 		if (BestPathFound.Contains(FlagSegment.id))
 		{
 			MainColor = FColor::Green;
+			FlagActor->SOFlag->Segment.PathType = EFlagPathType::GOLDEN;
+				
 		}
-		DrawDebugDirectionalArrow(
-				GetWorld(),
-				BeginPoint,
-				AdjustedLocation,
-				500,
-				MainColor,
-				true,
-				300
-			);
-	}
-	/*
-	TArray<int> Came_from;
-	Came_from.Init(0, NbOfFlag);
-	TArray<int> cost_so_far;
-	cost_so_far.Init(0, NbOfFlag);
-
-	TArray<int> InspectionList;
-	InspectionList.Push(StartingFlagId);
-	TArray<int> PriorityQueue;
-	
-	PriorityQueue.Push(0);
-	Came_from[StartingFlagId] = StartingFlagId;
-	cost_so_far[StartingFlagId] = 0;
-
-	while (!InspectionList.IsEmpty())
-	{
-		int Current = InspectionList.Pop();
-		if (Current == EndingFlagId)
-			break;
-		
-		TArray<int> Neighbors;
-		AFlagActor* CurrentFlag = FlagManager->GetFlagActor(Current);
-		Neighbors.Append(CurrentFlag->SOFlag->BeginPointIds);
-		Neighbors.Append(CurrentFlag->SOFlag->EndPointIds);
-		for (int next = 0; next < Neighbors.Num(); next++)
+		else
 		{
-			AFlagActor* NextFlag = FlagManager->GetFlagActor(next);
-			float NewCost = cost_so_far[Current]
-							+ (CurrentFlag->SOFlag->Segment.Lenght / 2)
-							+ (NextFlag->SOFlag->Segment.Lenght / 2);
-			
+			FlagActor->SOFlag->Segment.PathType = EFlagPathType::ALTERNATIVE;
 		}
-		
-		
+		if (DGoldenPath)
+		{
+			DrawDebugDirectionalArrow(
+					GetWorld(),
+					BeginPoint,
+					AdjustedLocation,
+					500,
+					MainColor,
+					true,
+					300
+				);
+		}
+		else
+		{
+			DrawDebugDirectionalArrow(
+					GetWorld(),
+					BeginPoint,
+					AdjustedLocation,
+					500,
+					FColor::Red,
+					true,
+					300
+				);
+		}
 	}
-
-	
-	
-
-	if (StartingFlagId == EndingFlagId)
-		UE_LOG(LogTemp, Warning, TEXT("GP : STARTING POINT AND END POINT SAME SEGMENT"))
-
-	AFlagActor* StartingFlag = FlagManager->GetFlagActor(StartingFlagId);
-	AFlagActor* EndingFlag = FlagManager->GetFlagActor(EndingFlagId);
-	*/
 }
 
+//GEOMETRY FUNCTION
 bool ASkeletalNavMeshBoundsVolume::NavPoly_GetAllPolys(TArray<NavNodeRef>& Polys)
 {
 	if (!NavMesh) return false;
@@ -228,20 +284,12 @@ bool ASkeletalNavMeshBoundsVolume::NavPoly_GetAllPolys(TArray<NavNodeRef>& Polys
 
 	return true;
 }
-
 bool ASkeletalNavMeshBoundsVolume::TileIsValid(const ARecastNavMesh* Navmesh, int32 TileIndex) const
 {
 	if (!NavMesh) return false;
 	const FBox TileBounds = NavMesh->GetNavMeshTileBounds(TileIndex);
 	return TileBounds.IsValid != 0;
 }
-
-void ASkeletalNavMeshBoundsVolume::BeginPlay()
-{
-	Super::BeginPlay();
-	ComputeGeometry();
-}
-
 bool ASkeletalNavMeshBoundsVolume::TestDirectionnality(FVector StartLocation, FVector EndLocation)
 {
 	float ParentNodeDistanceToStart = UE::Geometry::Distance(StartPointIndicator->GetActorLocation(), StartLocation);
@@ -259,20 +307,20 @@ bool ASkeletalNavMeshBoundsVolume::TestDirectionnality(FVector StartLocation, FV
 	}
 }
 
-float ASkeletalNavMeshBoundsVolume::AStarHeuristique(int FlagId, int GoalFlagId)
+//ASTAR FUNCTION
+float ASkeletalNavMeshBoundsVolume::AStarHeuristique(int Start, int Goal)
 {
-	auto StartFlag = FlagManager->GetFlagActor(FlagId);
-	auto GoalFlag = FlagManager->GetFlagActor(GoalFlagId);
+	auto StartFlag = FlagManager->GetFlagActor(Start);
+	auto GoalFlag = FlagManager->GetFlagActor(Goal);
 	return UE::Geometry::Distance(StartFlag->GetActorLocation(), GoalFlag->GetActorLocation());
 }
-
-TArray<int> ASkeletalNavMeshBoundsVolume::AStarAlgorithme()
+float ASkeletalNavMeshBoundsVolume::AStarAlgorithme(int StartFlagID, int EndFlagID, TArray<int>& BestPath)
 {
 	int NbOfFlag = FlagManager->GetFlagActorSize();
 	
 	// Flags currently investigated
 	TPriorityQueue<int> Frontier;
-	Frontier.Push(StartingFlagId, 0);
+	Frontier.Push(StartFlagID, 0);
 
 	//For each Flag N, neighbors on the cheapest path
 	TArray<int> CameFromFlagsN;
@@ -281,19 +329,19 @@ TArray<int> ASkeletalNavMeshBoundsVolume::AStarAlgorithme()
 	//Cheapest cost from Start Flag to N Flag
 	TArray<int> GScore;
 	GScore.Init(999999, NbOfFlag);
-	GScore[StartingFlagId] = 0;
+	GScore[StartFlagID] = 0;
 
 	//Current best guest as to howe cheap a path from Start Flag to ENd Flag who go through N Flag.
 	TArray<int> FScore;
 	FScore.Init(9999999, NbOfFlag);
-	FScore[StartingFlagId] = AStarHeuristique(StartingFlagId, EndingFlagId);
+	FScore[StartFlagID] = AStarHeuristique(StartFlagID, EndFlagID);
 	
 	while (!Frontier.IsEmpty())
 	{
 		auto CurrentFlagId = Frontier.Pop();
-		if (CurrentFlagId == EndingFlagId)
+		if (CurrentFlagId == EndFlagID)
 		{
-			return AStarPathReconstructor(CameFromFlagsN, EndingFlagId);
+			return AStarPathReconstructor(CameFromFlagsN, StartFlagID, EndFlagID, BestPath);
 		}
 		
 		TArray<int> Neighbors;
@@ -312,27 +360,30 @@ TArray<int> ASkeletalNavMeshBoundsVolume::AStarAlgorithme()
 			{
 				CameFromFlagsN[Neighbor] = CurrentFlagId;
 				GScore[Neighbor] = Tentative_GScore;
-				FScore[Neighbor] = Tentative_GScore + AStarHeuristique(Neighbor, EndingFlagId);
+				FScore[Neighbor] = Tentative_GScore + AStarHeuristique(Neighbor, EndFlagID);
 				Frontier.Push(Neighbor, FScore[Neighbor]);
 			}
 		}
 	}
-
-	TArray<int> NullArray;
-	return NullArray;
+	
+	return -1;
 }
-
-TArray<int> ASkeletalNavMeshBoundsVolume::AStarPathReconstructor(TArray<int> cameFrom, int Goal)
+float ASkeletalNavMeshBoundsVolume::AStarPathReconstructor(TArray<int> CameFrom, int Start, int Goal, TArray<int>& ReconstructedPath)
 {
-	TArray<int> BestPath;
+	ReconstructedPath.Empty();
+	float TotalPathLenght = FlagManager->GetFlagActor(Goal)->SOFlag->Segment.Lenght / 2;
 	int GoalID = Goal;
-	while (GoalID != StartingFlagId)
+	while (GoalID != Start)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%d"), GoalID);
-		BestPath.Add(GoalID);
-		GoalID = cameFrom[GoalID];
+		ReconstructedPath.Add(GoalID);
+		auto Flag = FlagManager->GetFlagActor(GoalID);
+		if (GoalID != Goal)
+			TotalPathLenght += Flag->SOFlag->Segment.Lenght;
+		GoalID = CameFrom[GoalID];
 	}
-	return BestPath;
+	TotalPathLenght += FlagManager->GetFlagActor(Start)->SOFlag->Segment.Lenght / 2;
+	return TotalPathLenght;
 }
 
 
