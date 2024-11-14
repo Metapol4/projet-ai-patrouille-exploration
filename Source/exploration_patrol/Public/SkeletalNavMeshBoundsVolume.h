@@ -37,6 +37,8 @@ public:
 	bool DSegments;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Debugs")
 	bool DGoldenPath;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Debugs")
+	bool DDirectionality;
 
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
 	void ClearDebugLine();
@@ -52,6 +54,8 @@ public:
 	void CalculateDirectionnality();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="01ControlPanel")
 	float MinimumPathLenght = 4000;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="01ControlPanel")
+	float AngleTolerance = 45;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="01ControlPanel")
 	AFlagManager* FlagManager;
 	
@@ -71,4 +75,5 @@ private:
 	float AStarHeuristique(int FlagId, int GoalFlagId);
 	float AStarAlgorithme(int StartFlagID, int EndFlagID, TArray<int>& BestPath);
 	float AStarPathReconstructor(TArray<int> CameFrom, int Start, int Goal, TArray<int>& ReconstructedPath);
+	void DebugDirectionality(int FlagID);
 };

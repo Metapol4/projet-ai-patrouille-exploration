@@ -2,6 +2,7 @@
 
 #include "DataTypeUtils.h"
 #include "VectorTypes.h"
+#include "Evaluation/IMovieSceneEvaluationHook.h"
 
 void ASkeletalNavMeshBoundsVolume::BeginPlay()
 {
@@ -262,6 +263,8 @@ void ASkeletalNavMeshBoundsVolume::FindGoldenPath()
 }
 void ASkeletalNavMeshBoundsVolume::CalculateDirectionnality()
 {
+	ClearDebugLine();
+	
 	AFlagActor* StartFlag = FlagManager->GetFlagActor(StartingFlagId);
 	StartFlag->SOFlag->Segment.FlagType = EFlagType::SAFE;
 	AFlagActor* GoalFlag = FlagManager->GetFlagActor(EndingFlagId);
@@ -271,10 +274,54 @@ void ASkeletalNavMeshBoundsVolume::CalculateDirectionnality()
 	{
 		if (FlagActor->SOFlag->Segment.FlagType == EFlagType::SAFE)
 			continue;
+
+		FlagActor->SOFlag->Segment.Direction = EFlagDirection::BOTH;
+		for (int id : FlagActor->SOFlag->Segment.VisibilityGroups)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("DIRCT : Evaluating %d"), id)
+			if (FlagManager->GetFlagActor(id)->SOFlag->Segment.FlagType != EFlagType::SAFE)
+				continue;
+
+			FVector ActorToSafe = FlagManager->GetFlagActor(id)->GetActorLocation() - FlagActor->GetActorLocation();
+			ActorToSafe.Normalize();
+
+			//Test begin to end
+			FVector BeginToEnd = FlagActor->SOFlag->Segment.EndPosition - FlagActor->SOFlag->Segment.BeginPosition;
+			BeginToEnd.Normalize();
+			
+			float EvaluatedAngle = UE::Geometry::AngleD(ActorToSafe, BeginToEnd);
+			UE_LOG(LogTemp, Warning, TEXT("DIRCT : Angle Begin to End %f"), EvaluatedAngle)
+			if (EvaluatedAngle < AngleTolerance)
+			{
+				FlagActor->SOFlag->Segment.Direction = EFlagDirection::END_BEGIN;
+			}
+			
+			//Test end to begin
+			FVector EndToBegin = FlagActor->SOFlag->Segment.BeginPosition - FlagActor->SOFlag->Segment.EndPosition;
+			EndToBegin.Normalize();
+			
+			EvaluatedAngle = UE::Geometry::AngleD(ActorToSafe, EndToBegin);
+			UE_LOG(LogTemp, Warning, TEXT("DIRCT : Angle End to Begin %f"), EvaluatedAngle)
+			if (EvaluatedAngle < AngleTolerance)
+			{
+				switch (FlagActor->SOFlag->Segment.Direction)
+				{
+				case EFlagDirection::NONE:
+				case EFlagDirection::BEGIN_END:
+				case EFlagDirection::IMPOSSIBLE:
+					break;
+				case EFlagDirection::BOTH:
+					FlagActor->SOFlag->Segment.Direction = EFlagDirection::BEGIN_END;
+					break;
+				case EFlagDirection::END_BEGIN:
+					FlagActor->SOFlag->Segment.Direction = EFlagDirection::IMPOSSIBLE;
+					break;
+				default: break;
+				}
+			}
+		}
 		
-		 //Test begin to end
-		 //Test end to beginning
-		
+		DebugDirectionality(FlagActor->SOFlag->Segment.id);
 	}
 }
 
@@ -401,6 +448,81 @@ float ASkeletalNavMeshBoundsVolume::AStarPathReconstructor(TArray<int> CameFrom,
 	}
 	TotalPathLenght += FlagManager->GetFlagActor(Start)->SOFlag->Segment.Lenght / 2;
 	return TotalPathLenght;
+}
+
+void ASkeletalNavMeshBoundsVolume::DebugDirectionality(int FlagID)
+{
+	AFlagActor* FlagActor = FlagManager->GetFlagActor(FlagID);
+	FVector Begin = FlagActor->SOFlag->Segment.BeginPosition;
+	FVector End = FlagActor->SOFlag->Segment.EndPosition;
+	FVector AdjustedBegin = Begin + (End - Begin) * 0.2f;
+	FVector AdjustedEnd = Begin + (End - Begin) * 0.8f;
+
+	switch (FlagActor->SOFlag->Segment.Direction) {
+	case EFlagDirection::NONE:
+		DrawDebugLine(
+				GetWorld(),
+				FlagActor->SOFlag->Segment.BeginPosition,
+				FlagActor->SOFlag->Segment.EndPosition,
+				FColor::Red,
+				true,
+				300
+						);
+		break;
+	case EFlagDirection::BEGIN_END:
+		DrawDebugDirectionalArrow(
+				GetWorld(),
+				AdjustedBegin,
+				AdjustedEnd,
+				500,
+				FColor::Yellow,
+				true,
+				300
+			);
+		break;
+	case EFlagDirection::END_BEGIN:
+		DrawDebugDirectionalArrow(
+				GetWorld(),
+				AdjustedEnd,
+				AdjustedBegin,
+				500,
+				FColor::Yellow,
+				true,
+				300
+			);
+		break;
+	case EFlagDirection::BOTH:
+		DrawDebugDirectionalArrow(
+				GetWorld(),
+				AdjustedBegin,
+				AdjustedEnd,
+				1000,
+				FColor::Green,
+				true,
+				300
+			);
+		DrawDebugDirectionalArrow(
+			GetWorld(),
+			AdjustedEnd,
+			AdjustedBegin,
+			1000,
+			FColor::Green,
+			true,
+			300
+		);
+		break;
+	case EFlagDirection::IMPOSSIBLE:
+		DrawDebugLine(
+			GetWorld(),
+			FlagActor->SOFlag->Segment.BeginPosition,
+			FlagActor->SOFlag->Segment.EndPosition,
+			FColor::Black,
+			true,
+			300
+		);
+		break;
+	default: ;
+	}
 }
 
 
