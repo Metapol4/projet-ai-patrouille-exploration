@@ -23,6 +23,7 @@ enum class EFlagDirection : uint8
 	NONE,
 	BEGIN_END,
 	END_BEGIN,
-	BOTH
+	BOTH,
+	IMPOSSIBLE
 };
 
