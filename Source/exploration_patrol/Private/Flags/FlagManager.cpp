@@ -287,11 +287,10 @@ void AFlagManager::ShowVisionGroupForActor(int id)
 		{
 			MainColor = FColor::Yellow;
 		}
-		DrawDebugDirectionalArrow(
+		DrawDebugLine(
 				GetWorld(),
 				BeginPoint,
 				AdjustedLocation,
-				500,
 				MainColor,
 				true,
 				300

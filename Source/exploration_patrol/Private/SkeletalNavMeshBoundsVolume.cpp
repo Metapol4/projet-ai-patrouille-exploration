@@ -63,11 +63,10 @@ void ASkeletalNavMeshBoundsVolume::ComputeGeometry()
 					if (DSegments)
 					{
 						FVector AdjustedLocation = SegmentBeginPoint + (SegmentEndPoint - SegmentBeginPoint) * 0.9f;
-						DrawDebugDirectionalArrow(
+						DrawDebugLine(
 								GetWorld(),
 								SegmentBeginPoint,
 								AdjustedLocation,
-								500,
 								FColor::Red,
 								true,
 								300
@@ -234,6 +233,7 @@ void ASkeletalNavMeshBoundsVolume::FindGoldenPath()
 		{
 			FlagActor->SOFlag->Segment.PathType = EFlagPathType::ALTERNATIVE;
 		}
+		
 		if (DGoldenPath)
 		{
 			DrawDebugDirectionalArrow(
@@ -258,6 +258,23 @@ void ASkeletalNavMeshBoundsVolume::FindGoldenPath()
 					300
 				);
 		}
+	}
+}
+void ASkeletalNavMeshBoundsVolume::CalculateDirectionnality()
+{
+	AFlagActor* StartFlag = FlagManager->GetFlagActor(StartingFlagId);
+	StartFlag->SOFlag->Segment.FlagType = EFlagType::SAFE;
+	AFlagActor* GoalFlag = FlagManager->GetFlagActor(EndingFlagId);
+	GoalFlag->SOFlag->Segment.FlagType = EFlagType::SAFE;
+	
+	for (AFlagActor* FlagActor : FlagManager->GetFlagActors())
+	{
+		if (FlagActor->SOFlag->Segment.FlagType == EFlagType::SAFE)
+			continue;
+		
+		 //Test begin to end
+		 //Test end to beginning
+		
 	}
 }
 

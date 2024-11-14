@@ -25,6 +25,7 @@ public:
 	TArray<NavNodeRef> PolyArray;
 
 	TArray<FFlagSegment> FlagSegments;
+	
 	TArray<int> GoldenPath;
 	int StartingFlagId, EndingFlagId;
 
@@ -47,6 +48,8 @@ public:
 	void CalculateVisionGroups();
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
 	void FindGoldenPath();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	void CalculateDirectionnality();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="01ControlPanel")
 	float MinimumPathLenght = 4000;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="01ControlPanel")
