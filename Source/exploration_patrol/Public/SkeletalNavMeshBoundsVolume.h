@@ -48,7 +48,7 @@ public:
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
 	void FindGoldenPath();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="01ControlPanel")
-	float MinimumPathLenght;
+	float MinimumPathLenght = 4000;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="01ControlPanel")
 	AFlagManager* FlagManager;
 	
