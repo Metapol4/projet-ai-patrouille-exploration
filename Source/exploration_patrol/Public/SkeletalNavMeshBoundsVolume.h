@@ -44,7 +44,7 @@ public:
 	void ClearDebugLine();
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanelUtils")
 	void ComputeGeometry();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanelUtils")
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="02ControlPanelFlags")
 	void ResetAllFlagTypes();
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="02ControlPanelFlags")
 	void SendFlagBatch();
@@ -60,9 +60,9 @@ public:
 	void SelectChallengeSegments();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="04ControlPanelGolden")
 	float MinimumPathLenght = 4000;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="02ControlPanelFlags")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="05ControlPanelDirectionality")
 	float AngleTolerance = 45;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="01ControlPanel")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="02ControlPanelFlags")
 	AFlagManager* FlagManager;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="02GeometryReference")
