@@ -29,7 +29,8 @@ public:
 	TArray<int> GoldenPath;
 	int GoldenStartingFlagId, GoldenEndingFlagId;
 	TArray<int> GoldenPathCopy;
-	// Editor Helper
+	
+	TArray<TArray<int>> ChallengeGroups;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Debugs")
 	bool DNodes;
@@ -58,10 +59,18 @@ public:
 	void SelectAllChallengeSegments();
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
 	void SelectChallengeSegments();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	void CreateChallengeGroups();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	void PrintChallengeGroups();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="04ControlPanelGolden")
 	float MinimumPathLenght = 4000;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="05ControlPanelDirectionality")
 	float AngleTolerance = 45;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+	int PercentChanceOfMergingChallengeGroup = 50;
+
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="02ControlPanelFlags")
 	AFlagManager* FlagManager;
 	

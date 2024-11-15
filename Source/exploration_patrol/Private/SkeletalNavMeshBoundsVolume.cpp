@@ -285,7 +285,7 @@ void ASkeletalNavMeshBoundsVolume::FindGoldenPath()
 void ASkeletalNavMeshBoundsVolume::CalculateDirectionnality()
 {
 	ClearDebugLine();
-	
+
 	AFlagActor* StartFlag = FlagManager->GetFlagActor(GoldenStartingFlagId);
 	StartFlag->SOFlag->Segment.FlagType = EFlagType::SAFE;
 	AFlagActor* GoalFlag = FlagManager->GetFlagActor(GoldenEndingFlagId);
@@ -309,18 +309,18 @@ void ASkeletalNavMeshBoundsVolume::CalculateDirectionnality()
 			//Test begin to end
 			FVector BeginToEnd = FlagActor->SOFlag->Segment.EndPosition - FlagActor->SOFlag->Segment.BeginPosition;
 			BeginToEnd.Normalize();
-			
+
 			float EvaluatedAngle = UE::Geometry::AngleD(ActorToSafe, BeginToEnd);
 			UE_LOG(LogTemp, Warning, TEXT("DIRCT : Angle Begin to End %f"), EvaluatedAngle)
 			if (EvaluatedAngle < AngleTolerance)
 			{
 				FlagActor->SOFlag->Segment.Direction = EFlagDirection::END_BEGIN;
 			}
-			
+
 			//Test end to begin
 			FVector EndToBegin = FlagActor->SOFlag->Segment.BeginPosition - FlagActor->SOFlag->Segment.EndPosition;
 			EndToBegin.Normalize();
-			
+
 			EvaluatedAngle = UE::Geometry::AngleD(ActorToSafe, EndToBegin);
 			UE_LOG(LogTemp, Warning, TEXT("DIRCT : Angle End to Begin %f"), EvaluatedAngle)
 			if (EvaluatedAngle < AngleTolerance)
@@ -341,19 +341,16 @@ void ASkeletalNavMeshBoundsVolume::CalculateDirectionnality()
 				}
 			}
 		}
-		
-		DebugDirectionality(FlagActor->SOFlag->Segment.id);
 
-		//Test begin to end
-		//Test end to beginning
+		DebugDirectionality(FlagActor->SOFlag->Segment.id);
 	}
 }
 
 void ASkeletalNavMeshBoundsVolume::SelectAllChallengeSegments()
 {
 	ClearDebugLine();
-	
-	while(GoldenPathCopy.Num() > 0)
+
+	while (GoldenPathCopy.Num() > 0)
 	{
 		SelectChallengeSegments();
 	}
@@ -413,7 +410,7 @@ void ASkeletalNavMeshBoundsVolume::SelectChallengeSegments()
 
 	int NbSurroundingChallenges = GPSegmentFlag->SOFlag->IsTouchingFlagType(EFlagType::CHALLENGE, true);
 
-	bool IsPartOfChallengeGroup = UKismetMathLibrary::RandomBool();
+	int PartOfChallengeGroupRoll = UKismetMathLibrary::RandomIntegerInRange(0, 100);
 
 	switch (NbSurroundingChallenges)
 	{
@@ -424,11 +421,8 @@ void ASkeletalNavMeshBoundsVolume::SelectChallengeSegments()
 			GPSegmentFlag->SOFlag->Segment.FlagType = EFlagType::RISKY;
 		break;
 	case 1:
-		if (IsPartOfChallengeGroup)
-		{
-			/*TODO: ADD TO CHALLENGE GROUP WHEN THATS DONE*/
-			GPSegmentFlag->SOFlag->Segment.FlagType = EFlagType::CHALLENGE; //FIXME: change for group :D
-		}
+		if (PartOfChallengeGroupRoll <= PercentChanceOfMergingChallengeGroup)
+			GPSegmentFlag->SOFlag->Segment.FlagType = EFlagType::CHALLENGE;
 		else
 			GPSegmentFlag->SOFlag->Segment.FlagType = EFlagType::RISKY;
 		break;
@@ -489,6 +483,41 @@ void ASkeletalNavMeshBoundsVolume::SelectChallengeSegments()
 			300
 		);
 		break;
+	}
+}
+
+void ASkeletalNavMeshBoundsVolume::CreateChallengeGroups()
+{
+	for (int i = 1; i < GoldenPath.Num(); i++)
+	{
+		AFlagActor* CurrentSegment = FlagManager->GetFlagActor(GoldenPath[i]);
+		AFlagActor* PreviousSegment = FlagManager->GetFlagActor(GoldenPath[i - 1]);
+		if (CurrentSegment->SOFlag->Segment.FlagType == EFlagType::CHALLENGE)
+		{
+			if (PreviousSegment->SOFlag->Segment.FlagType != EFlagType::CHALLENGE)
+			{
+				TArray<int> NewGroup = TArray<int>();
+				NewGroup.Add(CurrentSegment->SOFlag->Segment.id);
+				ChallengeGroups.Add(NewGroup);
+			}
+			else
+				ChallengeGroups.Last().Add(CurrentSegment->SOFlag->Segment.id);
+		}
+	}
+}
+
+void ASkeletalNavMeshBoundsVolume::PrintChallengeGroups()
+{
+	for (int i = 0; i < ChallengeGroups.Num(); i++)
+	{
+		FString GroupPrint = "group " + i;
+		GroupPrint.Append(" ");
+		for (auto SingularPrint : ChallengeGroups[i])
+		{
+			GroupPrint.Append(FString::FromInt(SingularPrint));
+			GroupPrint.Append(" ");
+		}
+		UE_LOG(LogTemp, Warning, TEXT("CHLNGGRP: is %s"), *GroupPrint);
 	}
 }
 
@@ -630,49 +659,50 @@ void ASkeletalNavMeshBoundsVolume::DebugDirectionality(int FlagID)
 	FVector AdjustedBegin = Begin + (End - Begin) * 0.2f;
 	FVector AdjustedEnd = Begin + (End - Begin) * 0.8f;
 
-	switch (FlagActor->SOFlag->Segment.Direction) {
+	switch (FlagActor->SOFlag->Segment.Direction)
+	{
 	case EFlagDirection::NONE:
 		DrawDebugLine(
-				GetWorld(),
-				FlagActor->SOFlag->Segment.BeginPosition,
-				FlagActor->SOFlag->Segment.EndPosition,
-				FColor::Red,
-				true,
-				300
-						);
+			GetWorld(),
+			FlagActor->SOFlag->Segment.BeginPosition,
+			FlagActor->SOFlag->Segment.EndPosition,
+			FColor::Red,
+			true,
+			300
+		);
 		break;
 	case EFlagDirection::BEGIN_END:
 		DrawDebugDirectionalArrow(
-				GetWorld(),
-				AdjustedBegin,
-				AdjustedEnd,
-				500,
-				FColor::Yellow,
-				true,
-				300
-			);
+			GetWorld(),
+			AdjustedBegin,
+			AdjustedEnd,
+			500,
+			FColor::Yellow,
+			true,
+			300
+		);
 		break;
 	case EFlagDirection::END_BEGIN:
 		DrawDebugDirectionalArrow(
-				GetWorld(),
-				AdjustedEnd,
-				AdjustedBegin,
-				500,
-				FColor::Yellow,
-				true,
-				300
-			);
+			GetWorld(),
+			AdjustedEnd,
+			AdjustedBegin,
+			500,
+			FColor::Yellow,
+			true,
+			300
+		);
 		break;
 	case EFlagDirection::BOTH:
 		DrawDebugDirectionalArrow(
-				GetWorld(),
-				AdjustedBegin,
-				AdjustedEnd,
-				1000,
-				FColor::Green,
-				true,
-				300
-			);
+			GetWorld(),
+			AdjustedBegin,
+			AdjustedEnd,
+			1000,
+			FColor::Green,
+			true,
+			300
+		);
 		DrawDebugDirectionalArrow(
 			GetWorld(),
 			AdjustedEnd,
@@ -696,6 +726,3 @@ void ASkeletalNavMeshBoundsVolume::DebugDirectionality(int FlagID)
 	default: ;
 	}
 }
-
-
-
