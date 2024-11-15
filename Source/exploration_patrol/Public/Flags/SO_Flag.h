@@ -43,6 +43,10 @@ public:
 	UFUNCTION()
 	void AddToBeginConnections(USO_Flag* FlagToconnect);
 	void AddToEndConnections(USO_Flag* FlagToconnect);
+	UFUNCTION()
+	int IsTouchingFlagType(EFlagType FlagType, bool MustBeGolden = false);
+	UFUNCTION()
+	int IsTouchingPathType(EFlagPathType PathType);
 	UPROPERTY()
 	TArray<USO_Flag*> BeginPointConnections;
 	UPROPERTY()
@@ -51,8 +55,6 @@ public:
 	TArray<int> BeginPointIds;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<int> EndPointIds;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EFlagType FlagType;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FFlagSegment Segment;
 	

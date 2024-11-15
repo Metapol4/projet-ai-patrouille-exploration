@@ -27,9 +27,10 @@ public:
 	TArray<FFlagSegment> FlagSegments;
 	
 	TArray<int> GoldenPath;
-	int StartingFlagId, EndingFlagId;
-
-	// Editor Helper
+	int GoldenStartingFlagId, GoldenEndingFlagId;
+	TArray<int> GoldenPathCopy;
+	
+	TArray<TArray<int>> ChallengeGroups;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Debugs")
 	bool DNodes;
@@ -37,22 +38,40 @@ public:
 	bool DSegments;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Debugs")
 	bool DGoldenPath;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Debugs")
+	bool DDirectionality;
 
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanelUtils")
 	void ClearDebugLine();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanelUtils")
 	void ComputeGeometry();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="02ControlPanelFlags")
+	void ResetAllFlagTypes();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="02ControlPanelFlags")
 	void SendFlagBatch();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="03ControlPanelVision")
 	void CalculateVisionGroups();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="04ControlPanelGolden")
 	void FindGoldenPath();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="05ControlPanelDirectionality")
 	void CalculateDirectionnality();
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="01ControlPanel")
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	void SelectAllChallengeSegments();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	void SelectChallengeSegments();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	void CreateChallengeGroups();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	void PrintChallengeGroups();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="04ControlPanelGolden")
 	float MinimumPathLenght = 4000;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="01ControlPanel")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="05ControlPanelDirectionality")
+	float AngleTolerance = 45;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+	int PercentChanceOfMergingChallengeGroup = 50;
+
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="02ControlPanelFlags")
 	AFlagManager* FlagManager;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="02GeometryReference")
@@ -71,4 +90,5 @@ private:
 	float AStarHeuristique(int FlagId, int GoalFlagId);
 	float AStarAlgorithme(int StartFlagID, int EndFlagID, TArray<int>& BestPath);
 	float AStarPathReconstructor(TArray<int> CameFrom, int Start, int Goal, TArray<int>& ReconstructedPath);
+	void DebugDirectionality(int FlagID);
 };
