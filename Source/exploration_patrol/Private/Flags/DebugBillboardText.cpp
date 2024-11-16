@@ -51,3 +51,8 @@ void ADebugBillboardText::AddText(FString Text)
 	else
 		SetText(Current + "-" + Text);
 }
+
+void ADebugBillboardText::ResetText()
+{
+	TextComponent->SetText(FText::FromString(""));
+}

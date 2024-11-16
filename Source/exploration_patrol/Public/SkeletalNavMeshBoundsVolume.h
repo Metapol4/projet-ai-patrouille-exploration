@@ -60,7 +60,7 @@ public:
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="03ControlPanelVision")
 	void HighlightVisionGroupsFromList();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="03ControlPanelVision")
-	TArray<int> DSVisionPathsToHighlight;
+	TArray<FDebugVisionGroup> DSVisionPathsToHighlight;
 
 	/* Golden Path */
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="04ControlPanelGolden")

@@ -22,7 +22,6 @@ AFlagActor::AFlagActor()
 	cubeMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	RootComponent = cubeMeshComponent;
-
 }
 
 // Called when the game starts or when spawned
@@ -45,20 +44,36 @@ void AFlagActor::DrawDebugSegmentFlag()
 	VisibilityGroupText = GetWorld()->SpawnActor<ADebugBillboardText>(ADebugBillboardText::StaticClass(),
 	                                                                  GetActorLocation() + FVector(0, 0, 50),
 	                                                                  FRotator::ZeroRotator);
-	
 }
 
-void AFlagActor::AddToVisibilityGroup(int Group,bool UpdateText)
+void AFlagActor::AddToVisibilityGroup(int Group, bool UpdateText)
 {
 	SOFlag->Segment.VisibilityGroups.Add(Group);
-	if(UpdateText)
+	if (UpdateText)
 		VisibilityGroupText->AddText(FString::FromInt(Group));
-
 }
 
 void AFlagActor::SeeVisionGroup()
 {
-	auto manager = UGameplayStatics::GetActorOfClass(GetWorld(),AFlagManager::StaticClass());
+	auto manager = UGameplayStatics::GetActorOfClass(GetWorld(), AFlagManager::StaticClass());
 	AFlagManager* FlagManager = Cast<AFlagManager>(manager);
-	FlagManager->ShowVisionGroupForActor(SOFlag->Segment.id);
+	FDebugVisionGroup DebugInfo;
+	DebugInfo.id = SOFlag->Segment.id;
+	DebugInfo.Color = DVisionGroupColour;
+	if (!AdditiveToDebug)
+		FlagManager->ShowVisionGroupForActor(DebugInfo);
+	else
+	{
+		FlagManager->AddToShowVisionGroupActor(DebugInfo);
+	}
+}
+
+void AFlagActor::ResetText()
+{
+	VisibilityGroupText->ResetText();
+}
+
+void AFlagActor::SetVisionGroupText()
+{
+	VisibilityGroupText->SetText(FString::FromInt(SOFlag->Segment.id));
 }

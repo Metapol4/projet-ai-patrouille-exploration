@@ -8,12 +8,29 @@
 #include "GameFramework/Actor.h"
 #include "FlagManager.generated.h"
 
+class ASkeletalNavMeshBoundsVolume;
+
+USTRUCT(BlueprintType)
+struct FDebugVisionGroup
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere)
+	int id;
+	UPROPERTY(EditAnywhere)
+	FColor Color = FColor::Yellow;
+
+	bool operator==(const FDebugVisionGroup& b) const
+	{
+		return id == b.id; // && Color == b.Color; // dont need the colour... if the id matches its the same
+	}
+};
+
 UCLASS()
 class EXPLORATION_PATROL_API AFlagManager : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	AFlagManager();
 
@@ -27,13 +44,14 @@ protected:
 	TArray<AFlagActor*> FlagActors;
 
 	int StartingFlagId, EndingFlagId;
-	
+
 	UFUNCTION()
 	void CreateFlagsFromSegments();
 	UFUNCTION()
 	void ClearAll();
 	UFUNCTION()
 	void LinkFlags();
+
 public:
 	TArray<TArray<AFlagActor*>> VisionGroups;
 	TArray<FFlagSegment> GetSegments() const;
@@ -47,13 +65,21 @@ public:
 	UFUNCTION()
 	void NewCalculateIndividualVisionGroups();
 	UFUNCTION()
-	void ShowVisionGroupForActor(int id, bool DrawBlackLines = true);
+	void ShowVisionGroupForActor(FDebugVisionGroup DebugInfo, bool DrawBlackLines = true);
 	UFUNCTION()
-	void ShowVisionGroupForActors(TArray<int> ids);
+	void ShowVisionGroupForActors(TArray<FDebugVisionGroup> DebugInfo);
+	UFUNCTION()
+	void AddToShowVisionGroupActor(FDebugVisionGroup DebugInfo);
 	UFUNCTION()
 	AFlagActor* GetFlagActor(int id);
 	UFUNCTION()
 	int GetFlagActorSize();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Collision")
 	TEnumAsByte<ECollisionChannel> TraceChannelProperty = ECC_Pawn;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Exploration")
+	ASkeletalNavMeshBoundsVolume* SkeletalNavMeshBoundsVolume;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug")
+	bool ShowVisionGroupDebugText = true;
+
+	TArray<FDebugVisionGroup> DCurrentVisionDebug;
 };

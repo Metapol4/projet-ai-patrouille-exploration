@@ -3,6 +3,7 @@
 
 #include "Flags/FlagManager.h"
 
+#include "SkeletalNavMeshBoundsVolume.h"
 #include "VectorTypes.h"
 #include "exploration_patrol/exploration_patrolCharacter.h"
 #include "Kismet/GameplayStatics.h"
@@ -262,11 +263,11 @@ void AFlagManager::NewCalculateIndividualVisionGroups()
 	}
 }
 
-void AFlagManager::ShowVisionGroupForActor(int id, bool DrawBlackLines)
+void AFlagManager::ShowVisionGroupForActor(FDebugVisionGroup DebugInfo, bool DrawBlackLines)
 {
 	if (DrawBlackLines)
 		FlushPersistentDebugLines(GetWorld());
-	AFlagActor* flag = FlagActors[id];
+	AFlagActor* flag = FlagActors[DebugInfo.id];
 	DrawDebugSphere(
 		GetWorld(),
 		flag->GetActorLocation(),
@@ -286,7 +287,7 @@ void AFlagManager::ShowVisionGroupForActor(int id, bool DrawBlackLines)
 		FColor MainColor = FColor::Black;
 		if (flag->SOFlag->Segment.VisibilityGroups.Contains(FlagSegment.id))
 		{
-			MainColor = FColor::Yellow;
+			MainColor = DebugInfo.Color;
 			DrawDebugLine(
 				GetWorld(),
 				BeginPoint,
@@ -308,10 +309,13 @@ void AFlagManager::ShowVisionGroupForActor(int id, bool DrawBlackLines)
 			);
 		}
 	}
+	if (ShowVisionGroupDebugText)
+		flag->SetVisionGroupText();
 }
 
-void AFlagManager::ShowVisionGroupForActors(TArray<int> ids)
+void AFlagManager::ShowVisionGroupForActors(TArray<FDebugVisionGroup> DebugInfo)
 {
+	// draw black lines
 	for (auto FlagActor : FlagActors)
 	{
 		auto FlagSegment = FlagActor->SOFlag->Segment;
@@ -320,6 +324,8 @@ void AFlagManager::ShowVisionGroupForActors(TArray<int> ids)
 		FVector AdjustedLocation = BeginPoint + (EndPoint - BeginPoint) * 0.9f;
 
 		FColor MainColor = FColor::Black;
+
+		FlagActor->ResetText();
 
 		DrawDebugLine(
 			GetWorld(),
@@ -330,10 +336,18 @@ void AFlagManager::ShowVisionGroupForActors(TArray<int> ids)
 			300
 		);
 	}
-	for (auto Element : ids)
+	// draw yellow lines
+	for (auto Element : DebugInfo)
 	{
 		ShowVisionGroupForActor(Element, false);
 	}
+}
+
+void AFlagManager::AddToShowVisionGroupActor(FDebugVisionGroup DebugInfo)
+{
+	DCurrentVisionDebug.AddUnique(DebugInfo);
+	SkeletalNavMeshBoundsVolume->DSVisionPathsToHighlight = TArray(DCurrentVisionDebug);
+	ShowVisionGroupForActors(DCurrentVisionDebug);
 }
 
 AFlagActor* AFlagManager::GetFlagActor(int id)

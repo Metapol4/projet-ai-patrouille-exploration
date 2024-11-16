@@ -30,5 +30,6 @@ public:
 
 	void SetText(FString Text);
 	void AddText(FString Text);
+	void ResetText();
 
 };

@@ -9,6 +9,8 @@
 #include "Flags/DebugBillboardText.h"
 #include "FlagActor.generated.h"
 
+
+
 UCLASS()
 class EXPLORATION_PATROL_API AFlagActor : public AActor
 {
@@ -32,4 +34,12 @@ public:
 	void AddToVisibilityGroup(int Group,bool UpdateText = true);
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
 	void SeeVisionGroup();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="01ControlPanel")
+	bool AdditiveToDebug = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="01ControlPanel")
+	FColor DVisionGroupColour = FColor::Yellow;
+	UFUNCTION()
+	void ResetText();
+	UFUNCTION()
+	void SetVisionGroupText();
 };
