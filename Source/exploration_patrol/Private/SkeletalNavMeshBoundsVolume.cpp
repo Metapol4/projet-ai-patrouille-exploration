@@ -4,14 +4,31 @@
 #include "VectorTypes.h"
 #include "Kismet/KismetMathLibrary.h"
 
+void ASkeletalNavMeshBoundsVolume::GenerateAll()
+{
+	SendFlagBatch();
+	CalculateVisionGroups();
+	FindGoldenPath();
+	CalculateDirectionnality();
+	SelectAllChallengeSegments();
+	CreateChallengeGroups();
+	PrintChallengeGroups();
+}
+
 void ASkeletalNavMeshBoundsVolume::BeginPlay()
 {
 	Super::BeginPlay();
 	ComputeGeometry();
 }
 
-//CONSOLE FUNCTION
 void ASkeletalNavMeshBoundsVolume::ClearDebugLine()
+{
+	if (FlushDebugLinesWhenGeneratingNewOnes)
+		FlushPersistentDebugLines(GetWorld());
+}
+
+//CONSOLE FUNCTION
+void ASkeletalNavMeshBoundsVolume::ClearDebugLineConsole()
 {
 	FlushPersistentDebugLines(GetWorld());
 }
