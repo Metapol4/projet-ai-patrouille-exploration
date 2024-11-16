@@ -3,6 +3,7 @@
 
 #include "Flags/FlagManager.h"
 
+#include "SkeletalNavMeshBoundsVolume.h"
 #include "VectorTypes.h"
 #include "exploration_patrol/exploration_patrolCharacter.h"
 #include "Kismet/GameplayStatics.h"
@@ -256,25 +257,26 @@ void AFlagManager::NewCalculateIndividualVisionGroups()
 			if (!HasHitSomething)
 			{
 				FlagActors[i]->AddToVisibilityGroup(j, false);
-				FlagActors[j]->AddToVisibilityGroup(i, false);
-;			}
+				FlagActors[j]->AddToVisibilityGroup(i, false);;
+			}
 		}
 	}
 }
 
-void AFlagManager::ShowVisionGroupForActor(int id)
+void AFlagManager::ShowVisionGroupForActor(FDebugVisionGroup DebugInfo, bool DrawBlackLines)
 {
-	FlushPersistentDebugLines(GetWorld());
-	AFlagActor* flag = FlagActors[id];
+	if (DrawBlackLines)
+		FlushPersistentDebugLines(GetWorld());
+	AFlagActor* flag = FlagActors[DebugInfo.id];
 	DrawDebugSphere(
-				GetWorld(),
-				flag->GetActorLocation(),
-				50,
-				12,
-				FColor::Blue,
-				true,
-				300
-			);
+		GetWorld(),
+		flag->GetActorLocation(),
+		50,
+		12,
+		FColor::Blue,
+		true,
+		300
+	);
 	for (auto FlagActor : FlagActors)
 	{
 		auto FlagSegment = FlagActor->SOFlag->Segment;
@@ -285,9 +287,8 @@ void AFlagManager::ShowVisionGroupForActor(int id)
 		FColor MainColor = FColor::Black;
 		if (flag->SOFlag->Segment.VisibilityGroups.Contains(FlagSegment.id))
 		{
-			MainColor = FColor::Yellow;
-		}
-		DrawDebugLine(
+			MainColor = DebugInfo.Color;
+			DrawDebugLine(
 				GetWorld(),
 				BeginPoint,
 				AdjustedLocation,
@@ -295,7 +296,58 @@ void AFlagManager::ShowVisionGroupForActor(int id)
 				true,
 				300
 			);
+		}
+		if (DrawBlackLines)
+		{
+			DrawDebugLine(
+				GetWorld(),
+				BeginPoint,
+				AdjustedLocation,
+				MainColor,
+				true,
+				300
+			);
+		}
 	}
+	if (ShowVisionGroupDebugText)
+		flag->SetVisionGroupText();
+}
+
+void AFlagManager::ShowVisionGroupForActors(TArray<FDebugVisionGroup> DebugInfo)
+{
+	// draw black lines
+	for (auto FlagActor : FlagActors)
+	{
+		auto FlagSegment = FlagActor->SOFlag->Segment;
+		FVector BeginPoint = FlagSegment.BeginPosition;
+		FVector EndPoint = FlagSegment.EndPosition;
+		FVector AdjustedLocation = BeginPoint + (EndPoint - BeginPoint) * 0.9f;
+
+		FColor MainColor = FColor::Black;
+
+		FlagActor->ResetText();
+
+		DrawDebugLine(
+			GetWorld(),
+			BeginPoint,
+			AdjustedLocation,
+			MainColor,
+			true,
+			300
+		);
+	}
+	// draw yellow lines
+	for (auto Element : DebugInfo)
+	{
+		ShowVisionGroupForActor(Element, false);
+	}
+}
+
+void AFlagManager::AddToShowVisionGroupActor(FDebugVisionGroup DebugInfo)
+{
+	DCurrentVisionDebug.AddUnique(DebugInfo);
+	SkeletalNavMeshBoundsVolume->DSVisionPathsToHighlight = TArray(DCurrentVisionDebug);
+	ShowVisionGroupForActors(DCurrentVisionDebug);
 }
 
 AFlagActor* AFlagManager::GetFlagActor(int id)
@@ -304,7 +356,7 @@ AFlagActor* AFlagManager::GetFlagActor(int id)
 	{
 		return nullptr;
 	}
-	return FlagActors[id]; 
+	return FlagActors[id];
 }
 
 int AFlagManager::GetFlagActorSize()

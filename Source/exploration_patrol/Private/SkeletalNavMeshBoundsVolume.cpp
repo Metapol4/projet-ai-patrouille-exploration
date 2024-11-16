@@ -4,6 +4,17 @@
 #include "VectorTypes.h"
 #include "Kismet/KismetMathLibrary.h"
 
+void ASkeletalNavMeshBoundsVolume::GenerateAll()
+{
+	SendFlagBatch();
+	CalculateVisionGroups();
+	FindGoldenPath();
+	CalculateDirectionnality();
+	SelectAllChallengeSegments();
+	CreateChallengeGroups();
+	PrintChallengeGroups();
+}
+
 void ASkeletalNavMeshBoundsVolume::BeginPlay()
 {
 	Super::BeginPlay();
@@ -99,6 +110,15 @@ void ASkeletalNavMeshBoundsVolume::SendFlagBatch()
 void ASkeletalNavMeshBoundsVolume::CalculateVisionGroups()
 {
 	FlagManager->CalculateVisionGroups();
+}
+
+void ASkeletalNavMeshBoundsVolume::HighlightVisionGroupsFromList()
+{
+	if (DSVisionPathsToHighlight.Num() > 0)
+	{
+		ClearDebugLine();
+		FlagManager->ShowVisionGroupForActors(DSVisionPathsToHighlight);
+	}
 }
 
 void ASkeletalNavMeshBoundsVolume::FindGoldenPath()
