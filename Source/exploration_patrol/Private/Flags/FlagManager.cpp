@@ -256,25 +256,26 @@ void AFlagManager::NewCalculateIndividualVisionGroups()
 			if (!HasHitSomething)
 			{
 				FlagActors[i]->AddToVisibilityGroup(j, false);
-				FlagActors[j]->AddToVisibilityGroup(i, false);
-;			}
+				FlagActors[j]->AddToVisibilityGroup(i, false);;
+			}
 		}
 	}
 }
 
-void AFlagManager::ShowVisionGroupForActor(int id)
+void AFlagManager::ShowVisionGroupForActor(int id, bool DrawBlackLines)
 {
-	FlushPersistentDebugLines(GetWorld());
+	if (DrawBlackLines)
+		FlushPersistentDebugLines(GetWorld());
 	AFlagActor* flag = FlagActors[id];
 	DrawDebugSphere(
-				GetWorld(),
-				flag->GetActorLocation(),
-				50,
-				12,
-				FColor::Blue,
-				true,
-				300
-			);
+		GetWorld(),
+		flag->GetActorLocation(),
+		50,
+		12,
+		FColor::Blue,
+		true,
+		300
+	);
 	for (auto FlagActor : FlagActors)
 	{
 		auto FlagSegment = FlagActor->SOFlag->Segment;
@@ -286,8 +287,7 @@ void AFlagManager::ShowVisionGroupForActor(int id)
 		if (flag->SOFlag->Segment.VisibilityGroups.Contains(FlagSegment.id))
 		{
 			MainColor = FColor::Yellow;
-		}
-		DrawDebugLine(
+			DrawDebugLine(
 				GetWorld(),
 				BeginPoint,
 				AdjustedLocation,
@@ -295,6 +295,44 @@ void AFlagManager::ShowVisionGroupForActor(int id)
 				true,
 				300
 			);
+		}
+		if (DrawBlackLines)
+		{
+			DrawDebugLine(
+				GetWorld(),
+				BeginPoint,
+				AdjustedLocation,
+				MainColor,
+				true,
+				300
+			);
+		}
+	}
+}
+
+void AFlagManager::ShowVisionGroupForActors(TArray<int> ids)
+{
+	for (auto FlagActor : FlagActors)
+	{
+		auto FlagSegment = FlagActor->SOFlag->Segment;
+		FVector BeginPoint = FlagSegment.BeginPosition;
+		FVector EndPoint = FlagSegment.EndPosition;
+		FVector AdjustedLocation = BeginPoint + (EndPoint - BeginPoint) * 0.9f;
+
+		FColor MainColor = FColor::Black;
+
+		DrawDebugLine(
+			GetWorld(),
+			BeginPoint,
+			AdjustedLocation,
+			MainColor,
+			true,
+			300
+		);
+	}
+	for (auto Element : ids)
+	{
+		ShowVisionGroupForActor(Element, false);
 	}
 }
 
@@ -304,7 +342,7 @@ AFlagActor* AFlagManager::GetFlagActor(int id)
 	{
 		return nullptr;
 	}
-	return FlagActors[id]; 
+	return FlagActors[id];
 }
 
 int AFlagManager::GetFlagActorSize()

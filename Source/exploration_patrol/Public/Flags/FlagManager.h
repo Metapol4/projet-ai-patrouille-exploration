@@ -47,7 +47,9 @@ public:
 	UFUNCTION()
 	void NewCalculateIndividualVisionGroups();
 	UFUNCTION()
-	void ShowVisionGroupForActor(int id);
+	void ShowVisionGroupForActor(int id, bool DrawBlackLines = true);
+	UFUNCTION()
+	void ShowVisionGroupForActors(TArray<int> ids);
 	UFUNCTION()
 	AFlagActor* GetFlagActor(int id);
 	UFUNCTION()

@@ -21,14 +21,8 @@ void ASkeletalNavMeshBoundsVolume::BeginPlay()
 	ComputeGeometry();
 }
 
-void ASkeletalNavMeshBoundsVolume::ClearDebugLine()
-{
-	if (FlushDebugLinesWhenGeneratingNewOnes)
-		FlushPersistentDebugLines(GetWorld());
-}
-
 //CONSOLE FUNCTION
-void ASkeletalNavMeshBoundsVolume::ClearDebugLineConsole()
+void ASkeletalNavMeshBoundsVolume::ClearDebugLine()
 {
 	FlushPersistentDebugLines(GetWorld());
 }
@@ -116,6 +110,15 @@ void ASkeletalNavMeshBoundsVolume::SendFlagBatch()
 void ASkeletalNavMeshBoundsVolume::CalculateVisionGroups()
 {
 	FlagManager->CalculateVisionGroups();
+}
+
+void ASkeletalNavMeshBoundsVolume::HighlightVisionGroupsFromList()
+{
+	if (DSVisionPathsToHighlight.Num() > 0)
+	{
+		ClearDebugLine();
+		FlagManager->ShowVisionGroupForActors(DSVisionPathsToHighlight);
+	}
 }
 
 void ASkeletalNavMeshBoundsVolume::FindGoldenPath()

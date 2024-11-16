@@ -40,7 +40,7 @@ public:
 
 	/* Utils */
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanelUtils")
-	void ClearDebugLineConsole();
+	void ClearDebugLine();
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanelUtils")
 	void ComputeGeometry();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="01ControlPanelUtils")
@@ -57,6 +57,10 @@ public:
 	/* Vision */
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="03ControlPanelVision")
 	void CalculateVisionGroups();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="03ControlPanelVision")
+	void HighlightVisionGroupsFromList();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="03ControlPanelVision")
+	TArray<int> DSVisionPathsToHighlight;
 
 	/* Golden Path */
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="04ControlPanelGolden")
@@ -108,5 +112,4 @@ private:
 	float AStarAlgorithme(int StartFlagID, int EndFlagID, TArray<int>& BestPath);
 	float AStarPathReconstructor(TArray<int> CameFrom, int Start, int Goal, TArray<int>& ReconstructedPath);
 	void DebugDirectionality(int FlagID);
-	void ClearDebugLine();
 };
