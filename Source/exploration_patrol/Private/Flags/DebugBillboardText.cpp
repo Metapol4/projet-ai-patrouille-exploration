@@ -43,6 +43,11 @@ void ADebugBillboardText::SetText(FString Text)
 	TextComponent->SetText(FText::FromString(Text));
 }
 
+void ADebugBillboardText::SetTextColor(FColor Color)
+{
+	TextComponent->TextRenderColor = Color;
+}
+
 void ADebugBillboardText::AddText(FString Text)
 {
 	FString Current = TextComponent->Text.ToString();

@@ -29,6 +29,7 @@ public:
 	UTextRenderComponent* TextComponent;
 
 	void SetText(FString Text);
+	void SetTextColor(FColor Color);
 	void AddText(FString Text);
 	void ResetText();
 

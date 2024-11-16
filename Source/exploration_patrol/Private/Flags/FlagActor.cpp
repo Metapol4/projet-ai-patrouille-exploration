@@ -76,4 +76,5 @@ void AFlagActor::ResetText()
 void AFlagActor::SetVisionGroupText()
 {
 	VisibilityGroupText->SetText(FString::FromInt(SOFlag->Segment.id));
+	VisibilityGroupText->SetTextColor(DVisionGroupColour);
 }
