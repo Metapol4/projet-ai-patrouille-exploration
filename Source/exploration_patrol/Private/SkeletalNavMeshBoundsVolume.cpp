@@ -530,7 +530,7 @@ void ASkeletalNavMeshBoundsVolume::PrintChallengeGroups()
 {
 	for (int i = 0; i < ChallengeGroups.Num(); i++)
 	{
-		FString GroupPrint = "group " + i;
+		FString GroupPrint = "group " + FString::FromInt(i);
 		GroupPrint.Append(" ");
 		for (auto SingularPrint : ChallengeGroups[i])
 		{
@@ -539,6 +539,36 @@ void ASkeletalNavMeshBoundsVolume::PrintChallengeGroups()
 		}
 		UE_LOG(LogTemp, Warning, TEXT("CHLNGGRP: is %s"), *GroupPrint);
 	}
+}
+
+void ASkeletalNavMeshBoundsVolume::PrintPathFromSourceId()
+{
+	ClearDebugLine();
+	int Goal = 0;
+	TArray<int> ReconstructedChallengePath;
+	ChallengePath.Init(-1, FlagManager->GetFlagActorSize());
+	ChallengePath[PathFromSourceIDDebug] = PathFromSourceIDDebug;
+	PathMoreThanKUtil(PathFromSourceIDDebug, MinimalKLenght, ChallengePath, Goal);
+	AStarPathReconstructor(ChallengePath, PathFromSourceIDDebug, Goal, ReconstructedChallengePath);
+	for (auto ChallengePathID : ReconstructedChallengePath)
+	{
+		AFlagActor* ChallengeFlag = FlagManager->GetFlagActor(ChallengePathID);
+		FColor MainColor = FColor::Green;
+		if (ChallengePathID == PathFromSourceIDDebug)
+		{
+			MainColor = FColor::Red;
+		}
+		DrawDebugDirectionalArrow(
+				GetWorld(),
+				ChallengeFlag->SOFlag->Segment.BeginPosition,
+				ChallengeFlag->SOFlag->Segment.EndPosition,
+				500,
+				MainColor,
+				true,
+				300
+			);
+	}
+	
 }
 
 //GEOMETRY FUNCTION
@@ -564,14 +594,12 @@ bool ASkeletalNavMeshBoundsVolume::NavPoly_GetAllPolys(TArray<NavNodeRef>& Polys
 
 	return true;
 }
-
 bool ASkeletalNavMeshBoundsVolume::TileIsValid(const ARecastNavMesh* Navmesh, int32 TileIndex) const
 {
 	if (!NavMesh) return false;
 	const FBox TileBounds = NavMesh->GetNavMeshTileBounds(TileIndex);
 	return TileBounds.IsValid != 0;
 }
-
 bool ASkeletalNavMeshBoundsVolume::TestDirectionnality(FVector StartLocation, FVector EndLocation)
 {
 	float ParentNodeDistanceToStart = UE::Geometry::Distance(StartPointIndicator->GetActorLocation(), StartLocation);
@@ -596,7 +624,6 @@ float ASkeletalNavMeshBoundsVolume::AStarHeuristique(int Start, int Goal)
 	auto GoalFlag = FlagManager->GetFlagActor(Goal);
 	return UE::Geometry::Distance(StartFlag->GetActorLocation(), GoalFlag->GetActorLocation());
 }
-
 float ASkeletalNavMeshBoundsVolume::AStarAlgorithme(int StartFlagID, int EndFlagID, TArray<int>& BestPath)
 {
 	int NbOfFlag = FlagManager->GetFlagActorSize();
@@ -651,7 +678,6 @@ float ASkeletalNavMeshBoundsVolume::AStarAlgorithme(int StartFlagID, int EndFlag
 
 	return -1;
 }
-
 float ASkeletalNavMeshBoundsVolume::AStarPathReconstructor(TArray<int> CameFrom, int Start, int Goal,
                                                            TArray<int>& ReconstructedPath)
 {
@@ -660,6 +686,11 @@ float ASkeletalNavMeshBoundsVolume::AStarPathReconstructor(TArray<int> CameFrom,
 	int GoalID = Goal;
 	while (GoalID != Start)
 	{
+		if(GoalID < 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("CHLG : FAIL AT %d"), GoalID);
+			return TotalPathLenght;
+		}
 		UE_LOG(LogTemp, Warning, TEXT("%d"), GoalID);
 		ReconstructedPath.Add(GoalID);
 		auto Flag = FlagManager->GetFlagActor(GoalID);
@@ -670,7 +701,6 @@ float ASkeletalNavMeshBoundsVolume::AStarPathReconstructor(TArray<int> CameFrom,
 	TotalPathLenght += FlagManager->GetFlagActor(Start)->SOFlag->Segment.Lenght / 2;
 	return TotalPathLenght;
 }
-
 void ASkeletalNavMeshBoundsVolume::DebugDirectionality(int FlagID)
 {
 	AFlagActor* FlagActor = FlagManager->GetFlagActor(FlagID);
@@ -745,4 +775,44 @@ void ASkeletalNavMeshBoundsVolume::DebugDirectionality(int FlagID)
 		break;
 	default: ;
 	}
+}
+
+//GARD PATH FUNCTION
+
+bool ASkeletalNavMeshBoundsVolume::PathMoreThanKUtil(int Source, int KLenght, TArray<int> &Path, int& Goal)
+{
+	if(KLenght <= 0)
+	{
+		//Goal = Source;
+		return true;
+	}
+
+	TArray<int> SourceNeighbors;
+	AFlagActor* SourceFlag = FlagManager->GetFlagActor(Source);
+	SourceNeighbors.Append(SourceFlag->SOFlag->BeginPointIds);
+	SourceNeighbors.Append(SourceFlag->SOFlag->EndPointIds);
+
+	for (int i = 0; i < SourceNeighbors.Num(); i++)
+	{
+		int NeighborsId = SourceNeighbors[i]; //17
+		int NeighborWeight = FlagManager->GetFlagActor(NeighborsId)->SOFlag->Segment.Lenght;
+
+		if(Path[NeighborsId] != -1)
+			continue;
+
+		if (NeighborWeight >= KLenght)
+		{
+			Goal = NeighborsId;
+			Path[NeighborsId] = Source;
+			return true;
+		}
+		
+		Path[NeighborsId] = Source;
+
+		if(PathMoreThanKUtil(NeighborsId, KLenght - NeighborWeight, Path, Goal))
+			return true;
+
+		Path[NeighborsId] = -1;
+	}
+	return false;
 }

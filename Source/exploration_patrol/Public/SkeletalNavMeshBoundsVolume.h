@@ -87,8 +87,19 @@ public:
 	void PrintChallengeGroups();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
 	int PercentChanceOfMergingChallengeGroup = 50;
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	void PrintPathFromSourceId();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+	int PathFromSourceIDDebug = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+	int MinimalKLenght = 0;
 
 	TArray<TArray<int>> ChallengeGroups;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+	TArray<int> ChallengePath;
+	
+	bool PathMoreThanKUtil(int Source, int KLenght, TArray<int> &Path, int& Goal);
 
 	UFUNCTION(BlueprintCallable, Category="06ControlPanelChallenge")
 	void SelectChallengeSegments();
