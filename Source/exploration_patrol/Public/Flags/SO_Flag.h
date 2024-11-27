@@ -13,7 +13,7 @@ struct FFlagSegment
 {
 	GENERATED_BODY()
 	UPROPERTY(EditAnywhere)
-	uint8 id;
+	int id;
 	UPROPERTY(EditAnywhere)
 	FVector BeginPosition;
 	UPROPERTY(EditAnywhere)
