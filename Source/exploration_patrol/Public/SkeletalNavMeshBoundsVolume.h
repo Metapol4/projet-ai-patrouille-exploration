@@ -89,6 +89,8 @@ public:
 	int PercentChanceOfMergingChallengeGroup = 50;
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
 	void PrintPathFromSourceId();
+	UFUNCTION()
+	bool AreSameChallengeGroup(int FlagA, int FlagB);
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
 	int PathFromSourceIDDebug = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")

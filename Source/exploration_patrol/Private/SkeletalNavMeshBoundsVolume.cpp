@@ -570,6 +570,18 @@ void ASkeletalNavMeshBoundsVolume::PrintPathFromSourceId()
 	}
 }
 
+bool ASkeletalNavMeshBoundsVolume::AreSameChallengeGroup(int FlagA, int FlagB)
+{
+	for (auto Element : ChallengeGroups)
+	{
+		if(Element.Contains(FlagA) && Element.Contains(FlagB))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 //GEOMETRY FUNCTION
 bool ASkeletalNavMeshBoundsVolume::NavPoly_GetAllPolys(TArray<NavNodeRef>& Polys)
 {
@@ -821,11 +833,19 @@ bool ASkeletalNavMeshBoundsVolume::PathMoreThanKUtil(int Source, int KLenght, TA
 
 	for (int i = 0; i < SourceNeighbors.Num(); i++)
 	{
-		int NeighborsId = SourceNeighbors[i]; //17
-		int NeighborWeight = FlagManager->GetFlagActor(NeighborsId)->SOFlag->Segment.Lenght;
+		int NeighborsId = SourceNeighbors[i]; 
+		AFlagActor* Neighbour = FlagManager->GetFlagActor(NeighborsId);
+		int NeighborWeight = Neighbour->SOFlag->Segment.Lenght;
 
 		if (Path[NeighborsId] != -1)
 			continue;
+		if (Neighbour->SOFlag->Segment.PathType == EFlagPathType::GOLDEN)
+		{
+			if (!AreSameChallengeGroup(Source, NeighborsId))
+			{
+				continue;
+			}
+		}
 
 		if (NeighborWeight >= KLenght)
 		{
