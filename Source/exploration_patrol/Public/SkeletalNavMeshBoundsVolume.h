@@ -95,6 +95,10 @@ public:
 	int PathFromSourceIDDebug = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
 	int MinimalKLenght = 0;
+	UPROPERTY()
+	int KLenghtIterations;
+	UPROPERTY()
+	int MaxKLenghtIterationsMod = 10;
 
 	TArray<TArray<int>> ChallengeGroups;
 	

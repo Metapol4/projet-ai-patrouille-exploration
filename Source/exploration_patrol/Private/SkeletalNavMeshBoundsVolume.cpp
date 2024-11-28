@@ -548,6 +548,7 @@ void ASkeletalNavMeshBoundsVolume::PrintPathFromSourceId()
 	TArray<int> ReconstructedChallengePath;
 	ChallengePath.Init(-1, FlagManager->GetFlagActorSize());
 	ChallengePath[PathFromSourceIDDebug] = PathFromSourceIDDebug;
+	KLenghtIterations = 0;
 	PathMoreThanKUtil(PathFromSourceIDDebug, MinimalKLenght, ChallengePath, Goal);
 	AStarPathReconstructor(ChallengePath, PathFromSourceIDDebug, Goal, ReconstructedChallengePath);
 	for (auto ChallengePathID : ReconstructedChallengePath)
@@ -797,6 +798,11 @@ void ASkeletalNavMeshBoundsVolume::DebugDirectionality(int FlagID)
 
 bool ASkeletalNavMeshBoundsVolume::PathMoreThanKUtil(int Source, int KLenght, TArray<int>& Path, int& Goal)
 {
+	/*security, prevent infinite stack*/
+	KLenghtIterations++;
+	if(KLenghtIterations > MaxKLenghtIterationsMod * MinimalKLenght)
+		return true;
+	
 	if (KLenght <= 0)
 	{
 		//Goal = Source;
@@ -830,7 +836,7 @@ bool ASkeletalNavMeshBoundsVolume::PathMoreThanKUtil(int Source, int KLenght, TA
 		SourceNeighbors.Append(SourceFlag->SOFlag->BeginPointIds);
 	if (!HasPassedThroughEnd)
 		SourceNeighbors.Append(SourceFlag->SOFlag->EndPointIds);
-
+	
 	for (int i = 0; i < SourceNeighbors.Num(); i++)
 	{
 		int NeighborsId = SourceNeighbors[i]; 
