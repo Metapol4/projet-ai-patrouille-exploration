@@ -74,7 +74,10 @@ public:
 
 	/* Directionality */
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="05ControlPanelDirectionality")
-	void CalculateDirectionnality();
+	void CalculateDirectionnality(EFlagType FlagType);
+	
+	EFlagDirection GetAdditiveFlagDirection(EFlagDirection WantedDirection, EFlagDirection CurrentDirection);
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="05ControlPanelDirectionality")
 	float AngleTolerance = 45;
 

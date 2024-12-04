@@ -9,7 +9,7 @@ void ASkeletalNavMeshBoundsVolume::GenerateAll()
 	SendFlagBatch();
 	CalculateVisionGroups();
 	FindGoldenPath();
-	CalculateDirectionnality();
+	CalculateDirectionnality(EFlagType::SAFE);
 	CreateChallenges();
 	/* OldChallenge selection
 	SelectAllChallengeSegments();
@@ -305,10 +305,9 @@ void ASkeletalNavMeshBoundsVolume::FindGoldenPath()
 	}
 }
 
-void ASkeletalNavMeshBoundsVolume::CalculateDirectionnality()
+void ASkeletalNavMeshBoundsVolume::CalculateDirectionnality(EFlagType FlagType)
 {
 	ClearDebugLine();
-
 	AFlagActor* StartFlag = FlagManager->GetFlagActor(GoldenStartingFlagId);
 	StartFlag->SOFlag->Segment.FlagType = EFlagType::SAFE;
 	AFlagActor* GoalFlag = FlagManager->GetFlagActor(GoldenEndingFlagId);
@@ -316,14 +315,15 @@ void ASkeletalNavMeshBoundsVolume::CalculateDirectionnality()
 
 	for (AFlagActor* FlagActor : FlagManager->GetFlagActors())
 	{
-		if (FlagActor->SOFlag->Segment.FlagType == EFlagType::SAFE)
+		if (FlagActor->SOFlag->Segment.FlagType == FlagType)
 			continue;
 
-		FlagActor->SOFlag->Segment.Direction = EFlagDirection::BOTH;
+		FlagActor->SOFlag->Segment.Direction = GetAdditiveFlagDirection(
+			EFlagDirection::BOTH, FlagActor->SOFlag->Segment.Direction);;
 		for (int id : FlagActor->SOFlag->Segment.VisibilityGroups)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("DIRCT : Evaluating %d"), id)
-			if (FlagManager->GetFlagActor(id)->SOFlag->Segment.FlagType != EFlagType::SAFE)
+			if (FlagManager->GetFlagActor(id)->SOFlag->Segment.FlagType != FlagType)
 				continue;
 
 			FVector ActorToSafe = FlagManager->GetFlagActor(id)->GetActorLocation() - FlagActor->GetActorLocation();
@@ -337,7 +337,8 @@ void ASkeletalNavMeshBoundsVolume::CalculateDirectionnality()
 			UE_LOG(LogTemp, Warning, TEXT("DIRCT : Angle Begin to End %f"), EvaluatedAngle)
 			if (EvaluatedAngle < AngleTolerance)
 			{
-				FlagActor->SOFlag->Segment.Direction = EFlagDirection::END_BEGIN;
+				FlagActor->SOFlag->Segment.Direction = GetAdditiveFlagDirection(
+					EFlagDirection::END_BEGIN, FlagActor->SOFlag->Segment.Direction);
 			}
 
 			//Test end to begin
@@ -355,10 +356,12 @@ void ASkeletalNavMeshBoundsVolume::CalculateDirectionnality()
 				case EFlagDirection::IMPOSSIBLE:
 					break;
 				case EFlagDirection::BOTH:
-					FlagActor->SOFlag->Segment.Direction = EFlagDirection::BEGIN_END;
+					FlagActor->SOFlag->Segment.Direction = GetAdditiveFlagDirection(
+						EFlagDirection::BEGIN_END, FlagActor->SOFlag->Segment.Direction);;
 					break;
 				case EFlagDirection::END_BEGIN:
-					FlagActor->SOFlag->Segment.Direction = EFlagDirection::IMPOSSIBLE;
+					FlagActor->SOFlag->Segment.Direction = GetAdditiveFlagDirection(
+						EFlagDirection::IMPOSSIBLE, FlagActor->SOFlag->Segment.Direction);;
 					break;
 				default: break;
 				}
@@ -366,6 +369,36 @@ void ASkeletalNavMeshBoundsVolume::CalculateDirectionnality()
 		}
 
 		DebugDirectionality(FlagActor->SOFlag->Segment.id);
+	}
+}
+
+EFlagDirection ASkeletalNavMeshBoundsVolume::GetAdditiveFlagDirection(EFlagDirection WantedDirection,
+                                                                      EFlagDirection CurrentDirection)
+{
+	switch (CurrentDirection)
+	{
+	case EFlagDirection::NONE:
+		return WantedDirection;
+
+	case EFlagDirection::BEGIN_END:
+		if (WantedDirection == EFlagDirection::END_BEGIN)
+			return EFlagDirection::IMPOSSIBLE;
+
+		return WantedDirection;
+
+	case EFlagDirection::END_BEGIN:
+		if (WantedDirection == EFlagDirection::BEGIN_END)
+			return EFlagDirection::IMPOSSIBLE;
+
+		return WantedDirection;
+
+	case EFlagDirection::BOTH:
+		return WantedDirection;
+
+	case EFlagDirection::IMPOSSIBLE:
+		return EFlagDirection::IMPOSSIBLE;
+
+	default: return CurrentDirection;
 	}
 }
 
