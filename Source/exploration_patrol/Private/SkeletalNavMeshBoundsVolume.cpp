@@ -305,6 +305,11 @@ void ASkeletalNavMeshBoundsVolume::FindGoldenPath()
 	}
 }
 
+void ASkeletalNavMeshBoundsVolume::CalculateDebugDirectionnality()
+{
+	CalculateDirectionnality(DebugFlagTypeDirection);
+}
+
 void ASkeletalNavMeshBoundsVolume::CalculateDirectionnality(EFlagType FlagType)
 {
 	ClearDebugLine();
@@ -319,7 +324,7 @@ void ASkeletalNavMeshBoundsVolume::CalculateDirectionnality(EFlagType FlagType)
 			continue;
 
 		FlagActor->SOFlag->Segment.Direction = GetAdditiveFlagDirection(
-			EFlagDirection::BOTH, FlagActor->SOFlag->Segment.Direction);;
+			EFlagDirection::BOTH, FlagActor->SOFlag->Segment.Direction);
 		for (int id : FlagActor->SOFlag->Segment.VisibilityGroups)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("DIRCT : Evaluating %d"), id)
@@ -383,12 +388,16 @@ EFlagDirection ASkeletalNavMeshBoundsVolume::GetAdditiveFlagDirection(EFlagDirec
 	case EFlagDirection::BEGIN_END:
 		if (WantedDirection == EFlagDirection::END_BEGIN)
 			return EFlagDirection::IMPOSSIBLE;
+		if (WantedDirection == EFlagDirection::BOTH)
+			return CurrentDirection;
 
 		return WantedDirection;
 
 	case EFlagDirection::END_BEGIN:
 		if (WantedDirection == EFlagDirection::BEGIN_END)
 			return EFlagDirection::IMPOSSIBLE;
+		if (WantedDirection == EFlagDirection::BOTH)
+			return CurrentDirection;
 
 		return WantedDirection;
 
@@ -397,9 +406,8 @@ EFlagDirection ASkeletalNavMeshBoundsVolume::GetAdditiveFlagDirection(EFlagDirec
 
 	case EFlagDirection::IMPOSSIBLE:
 		return EFlagDirection::IMPOSSIBLE;
-
-	default: return CurrentDirection;
 	}
+	return CurrentDirection;
 }
 
 void ASkeletalNavMeshBoundsVolume::LegacySelectAllChallengeSegments()

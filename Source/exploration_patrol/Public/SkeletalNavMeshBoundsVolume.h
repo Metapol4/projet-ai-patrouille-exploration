@@ -74,12 +74,16 @@ public:
 
 	/* Directionality */
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="05ControlPanelDirectionality")
+	void CalculateDebugDirectionnality();
+	
 	void CalculateDirectionnality(EFlagType FlagType);
 	
 	EFlagDirection GetAdditiveFlagDirection(EFlagDirection WantedDirection, EFlagDirection CurrentDirection);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="05ControlPanelDirectionality")
 	float AngleTolerance = 45;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="05ControlPanelDirectionality")
+	EFlagType DebugFlagTypeDirection = EFlagType::SAFE;
 
 	/* Challenge */
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
