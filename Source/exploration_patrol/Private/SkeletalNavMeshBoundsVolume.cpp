@@ -275,7 +275,7 @@ void ASkeletalNavMeshBoundsVolume::FindGoldenPath()
 		}
 		else
 		{
-			FlagActor->SOFlag->Segment.PathType = EFlagPathType::ALTERNATIVE; // TODO: FIXME: start flag gets set to alternative instead of golden
+			FlagActor->SOFlag->Segment.PathType = EFlagPathType::ALTERNATIVE;
 		}
 
 		if (DGoldenPath)
@@ -532,22 +532,22 @@ void ASkeletalNavMeshBoundsVolume::CreateChallenges()
 
 	StartFlag->SOFlag->Segment.FlagType = EFlagType::SAFE;
 	DrawDebugLine(
-					GetWorld(),
-					StartFlag->SOFlag->Segment.BeginPosition,
-					StartFlag->SOFlag->Segment.EndPosition,
-					FColor::Blue,
-					true,
-					300
-				);
+		GetWorld(),
+		StartFlag->SOFlag->Segment.BeginPosition,
+		StartFlag->SOFlag->Segment.EndPosition,
+		FColor::Blue,
+		true,
+		300
+	);
 	EndFlag->SOFlag->Segment.FlagType = EFlagType::SAFE;
 	DrawDebugLine(
-					GetWorld(),
-					EndFlag->SOFlag->Segment.BeginPosition,
-					EndFlag->SOFlag->Segment.EndPosition,
-					FColor::Blue,
-					true,
-					300
-				);
+		GetWorld(),
+		EndFlag->SOFlag->Segment.BeginPosition,
+		EndFlag->SOFlag->Segment.EndPosition,
+		FColor::Blue,
+		true,
+		300
+	);
 
 	float LengthPerChallenge = TotalGPLength / NbOfChallenges;
 	int SavedJ = 0;
@@ -803,6 +803,7 @@ float ASkeletalNavMeshBoundsVolume::AStarPathReconstructor(TArray<int> CameFrom,
 			TotalPathLenght += Flag->SOFlag->Segment.Lenght;
 		GoalID = CameFrom[GoalID];
 	}
+	ReconstructedPath.Add(Start);
 	TotalPathLenght += FlagManager->GetFlagActor(Start)->SOFlag->Segment.Lenght / 2;
 	return TotalPathLenght;
 }
