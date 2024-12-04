@@ -10,9 +10,12 @@ void ASkeletalNavMeshBoundsVolume::GenerateAll()
 	CalculateVisionGroups();
 	FindGoldenPath();
 	CalculateDirectionnality();
+	CreateChallenges();
+	/* OldChallenge selection
 	SelectAllChallengeSegments();
 	CreateChallengeGroups();
 	PrintChallengeGroups();
+	*/
 }
 
 void ASkeletalNavMeshBoundsVolume::BeginPlay()
@@ -366,18 +369,18 @@ void ASkeletalNavMeshBoundsVolume::CalculateDirectionnality()
 	}
 }
 
-void ASkeletalNavMeshBoundsVolume::SelectAllChallengeSegments()
+void ASkeletalNavMeshBoundsVolume::LegacySelectAllChallengeSegments()
 {
 	ClearDebugLine();
 
 	while (GoldenPathCopy.Num() > 0)
 	{
-		SelectChallengeSegments();
+		LegacySelectChallengeSegments();
 	}
 	GoldenPathCopy = TArray(GoldenPath);
 }
 
-void ASkeletalNavMeshBoundsVolume::SelectChallengeSegments()
+void ASkeletalNavMeshBoundsVolume::LegacySelectChallengeSegments()
 {
 	AFlagActor* BeginFlag = FlagManager->GetFlagActor(GoldenStartingFlagId);
 	BeginFlag->SOFlag->Segment.FlagType = EFlagType::SAFE;
@@ -506,7 +509,93 @@ void ASkeletalNavMeshBoundsVolume::SelectChallengeSegments()
 	}
 }
 
-void ASkeletalNavMeshBoundsVolume::CreateChallengeGroups()
+void ASkeletalNavMeshBoundsVolume::CreateChallenges()
+{
+	// makes button spammable :D
+	ClearDebugLine();
+	ChallengeGroups.Empty();
+	float TotalGPLength = 0;
+	for (int Element : GoldenPath)
+	{
+		AFlagActor* Flag = FlagManager->GetFlagActor(Element);
+		TotalGPLength += Flag->SOFlag->Segment.Lenght;
+	}
+	if (TotalGPLength <= 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CHLNG: Golden Path of length 0"))
+		return;
+	}
+
+	// first and last always safe
+	AFlagActor* StartFlag = FlagManager->GetFlagActor(GoldenStartingFlagId);
+	AFlagActor* EndFlag = FlagManager->GetFlagActor(GoldenEndingFlagId);
+
+	StartFlag->SOFlag->Segment.FlagType = EFlagType::SAFE;
+	DrawDebugLine(
+		GetWorld(),
+		StartFlag->SOFlag->Segment.BeginPosition,
+		StartFlag->SOFlag->Segment.EndPosition,
+		FColor::Blue,
+		true,
+		300
+	);
+	EndFlag->SOFlag->Segment.FlagType = EFlagType::SAFE;
+	DrawDebugLine(
+		GetWorld(),
+		EndFlag->SOFlag->Segment.BeginPosition,
+		EndFlag->SOFlag->Segment.EndPosition,
+		FColor::Blue,
+		true,
+		300
+	);
+
+	float LengthPerChallenge = TotalGPLength / NbOfChallenges;
+	int SavedJ = 0;
+	for (int i = 0; i < NbOfChallenges; i++)
+	{
+		TArray<int> NewGroup = TArray<int>();
+		ChallengeGroups.Add(NewGroup);
+
+		float CurrentChallengeLength = 0;
+		for (int j = SavedJ + 1; j < GoldenPath.Num() - 1; j++)
+		{
+			AFlagActor* Flag = FlagManager->GetFlagActor(GoldenPath[j]);
+			CurrentChallengeLength += Flag->SOFlag->Segment.Lenght;
+
+			if (CurrentChallengeLength < LengthPerChallenge)
+			{
+				Flag->SOFlag->Segment.FlagType = EFlagType::CHALLENGE;
+				ChallengeGroups.Last().Add(Flag->SOFlag->Segment.id);
+
+				DrawDebugLine(
+					GetWorld(),
+					Flag->SOFlag->Segment.BeginPosition,
+					Flag->SOFlag->Segment.EndPosition,
+					FColor::Red,
+					true,
+					300
+				);
+			}
+			else
+			{
+				Flag->SOFlag->Segment.FlagType = EFlagType::SAFE;
+				SavedJ = j;
+
+				DrawDebugLine(
+					GetWorld(),
+					Flag->SOFlag->Segment.BeginPosition,
+					Flag->SOFlag->Segment.EndPosition,
+					FColor::Blue,
+					true,
+					300
+				);
+				break;
+			}
+		}
+	}
+}
+
+void ASkeletalNavMeshBoundsVolume::LegacyCreateChallengeGroups()
 {
 	for (int i = 1; i < GoldenPath.Num(); i++)
 	{
@@ -530,7 +619,7 @@ void ASkeletalNavMeshBoundsVolume::PrintChallengeGroups()
 {
 	for (int i = 0; i < ChallengeGroups.Num(); i++)
 	{
-		FString GroupPrint = "group " + i;
+		FString GroupPrint = "group " + FString::FromInt(i);
 		GroupPrint.Append(" ");
 		for (auto SingularPrint : ChallengeGroups[i])
 		{
@@ -539,6 +628,48 @@ void ASkeletalNavMeshBoundsVolume::PrintChallengeGroups()
 		}
 		UE_LOG(LogTemp, Warning, TEXT("CHLNGGRP: is %s"), *GroupPrint);
 	}
+}
+
+void ASkeletalNavMeshBoundsVolume::PrintPathFromSourceId()
+{
+	ClearDebugLine();
+	int Goal = 0;
+	TArray<int> ReconstructedChallengePath;
+	ChallengePath.Init(-1, FlagManager->GetFlagActorSize());
+	ChallengePath[PathFromSourceIDDebug] = PathFromSourceIDDebug;
+	KLenghtIterations = 0;
+	PathMoreThanKUtil(PathFromSourceIDDebug, MinimalKLenght, ChallengePath, Goal);
+	AStarPathReconstructor(ChallengePath, PathFromSourceIDDebug, Goal, ReconstructedChallengePath);
+	for (auto ChallengePathID : ReconstructedChallengePath)
+	{
+		AFlagActor* ChallengeFlag = FlagManager->GetFlagActor(ChallengePathID);
+		FColor MainColor = FColor::Green;
+		if (ChallengePathID == PathFromSourceIDDebug)
+		{
+			MainColor = FColor::Red;
+		}
+		DrawDebugDirectionalArrow(
+			GetWorld(),
+			ChallengeFlag->SOFlag->Segment.BeginPosition,
+			ChallengeFlag->SOFlag->Segment.EndPosition,
+			500,
+			MainColor,
+			true,
+			300
+		);
+	}
+}
+
+bool ASkeletalNavMeshBoundsVolume::AreSameChallengeGroup(int FlagA, int FlagB)
+{
+	for (auto Element : ChallengeGroups)
+	{
+		if (Element.Contains(FlagA) && Element.Contains(FlagB))
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 //GEOMETRY FUNCTION
@@ -660,6 +791,11 @@ float ASkeletalNavMeshBoundsVolume::AStarPathReconstructor(TArray<int> CameFrom,
 	int GoalID = Goal;
 	while (GoalID != Start)
 	{
+		if (GoalID < 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("CHLG : FAIL AT %d"), GoalID);
+			return TotalPathLenght;
+		}
 		UE_LOG(LogTemp, Warning, TEXT("%d"), GoalID);
 		ReconstructedPath.Add(GoalID);
 		auto Flag = FlagManager->GetFlagActor(GoalID);
@@ -667,6 +803,7 @@ float ASkeletalNavMeshBoundsVolume::AStarPathReconstructor(TArray<int> CameFrom,
 			TotalPathLenght += Flag->SOFlag->Segment.Lenght;
 		GoalID = CameFrom[GoalID];
 	}
+	ReconstructedPath.Add(Start);
 	TotalPathLenght += FlagManager->GetFlagActor(Start)->SOFlag->Segment.Lenght / 2;
 	return TotalPathLenght;
 }
@@ -745,4 +882,80 @@ void ASkeletalNavMeshBoundsVolume::DebugDirectionality(int FlagID)
 		break;
 	default: ;
 	}
+}
+
+//GARD PATH FUNCTION
+
+bool ASkeletalNavMeshBoundsVolume::PathMoreThanKUtil(int Source, int KLenght, TArray<int>& Path, int& Goal)
+{
+	/*security, prevent infinite stack*/
+	KLenghtIterations++;
+	if (KLenghtIterations > MaxKLenghtIterationsMod * MinimalKLenght)
+		return true;
+
+	if (KLenght <= 0)
+	{
+		//Goal = Source;
+		return true;
+	}
+
+	TArray<int> SourceNeighbors;
+	AFlagActor* SourceFlag = FlagManager->GetFlagActor(Source);
+	bool HasPassedThroughBegin = false;
+	bool HasPassedThroughEnd = false;
+	for (int Segment : SourceFlag->SOFlag->BeginPointIds)
+	{
+		if (Path.Contains(Segment))
+		{
+			HasPassedThroughBegin = true;
+			break;
+		}
+	}
+	for (int Segment : SourceFlag->SOFlag->EndPointIds)
+	{
+		if (Path.Contains(Segment))
+		{
+			HasPassedThroughEnd = true;
+			break;
+		}
+	}
+	if (HasPassedThroughBegin && HasPassedThroughEnd)
+		return false;
+
+	if (!HasPassedThroughBegin)
+		SourceNeighbors.Append(SourceFlag->SOFlag->BeginPointIds);
+	if (!HasPassedThroughEnd)
+		SourceNeighbors.Append(SourceFlag->SOFlag->EndPointIds);
+
+	for (int i = 0; i < SourceNeighbors.Num(); i++)
+	{
+		int NeighborsId = SourceNeighbors[i];
+		AFlagActor* Neighbour = FlagManager->GetFlagActor(NeighborsId);
+		int NeighborWeight = Neighbour->SOFlag->Segment.Lenght;
+
+		if (Path[NeighborsId] != -1)
+			continue;
+		if (Neighbour->SOFlag->Segment.PathType == EFlagPathType::GOLDEN)
+		{
+			if (!AreSameChallengeGroup(Source, NeighborsId))
+			{
+				continue;
+			}
+		}
+
+		if (NeighborWeight >= KLenght)
+		{
+			Goal = NeighborsId;
+			Path[NeighborsId] = Source;
+			return true;
+		}
+
+		Path[NeighborsId] = Source;
+
+		if (PathMoreThanKUtil(NeighborsId, KLenght - NeighborWeight, Path, Goal))
+			return true;
+
+		Path[NeighborsId] = -1;
+	}
+	return false;
 }
