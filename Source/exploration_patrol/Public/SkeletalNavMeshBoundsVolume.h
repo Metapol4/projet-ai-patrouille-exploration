@@ -66,7 +66,7 @@ public:
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="04ControlPanelGolden")
 	void FindGoldenPath();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="04ControlPanelGolden")
-	float MinimumPathLenght = 4000;
+	float MinimumPathLenght = 6000;
 
 	TArray<int> GoldenPath;
 	int GoldenStartingFlagId, GoldenEndingFlagId;
@@ -80,17 +80,21 @@ public:
 
 	/* Challenge */
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
-	void CreateChallengeGroups();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
-	void SelectAllChallengeSegments();
+	void CreateChallenges();
+	UFUNCTION(/*CallInEditor, */BlueprintCallable, Category="06ControlPanelChallenge")
+	void LegacyCreateChallengeGroups();
+	UFUNCTION(/*CallInEditor, */BlueprintCallable, Category="06ControlPanelChallenge")
+	void LegacySelectAllChallengeSegments();
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
 	void PrintChallengeGroups();
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+	UPROPERTY(/*EditAnywhere,*/ BlueprintReadWrite, Category="06ControlPanelChallenge")
 	int PercentChanceOfMergingChallengeGroup = 50;
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
 	void PrintPathFromSourceId();
 	UFUNCTION()
 	bool AreSameChallengeGroup(int FlagA, int FlagB);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+	int NbOfChallenges = 3;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
 	int PathFromSourceIDDebug = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
@@ -108,7 +112,7 @@ public:
 	bool PathMoreThanKUtil(int Source, int KLenght, TArray<int> &Path, int& Goal);
 
 	UFUNCTION(BlueprintCallable, Category="06ControlPanelChallenge")
-	void SelectChallengeSegments();
+	void LegacySelectChallengeSegments();
 
 	/* GeometryRefs */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="07GeometryReference")
