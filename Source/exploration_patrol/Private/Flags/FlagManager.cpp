@@ -29,6 +29,7 @@ void AFlagManager::CreateFlagsFromSegments()
 	{
 		AFlagActor* FlagActor = Cast<AFlagActor>(GetWorld()->SpawnActor(AFlagActor::StaticClass()));
 		FlagActor->SOFlag->Segment = Flag;
+		FlagActor->SOFlag->Segment.VisionArea = FlagActor->SOFlag->Segment.Area;
 		FlagActor->SOFlag->Segment.id = CurrentId;
 		CurrentId++;
 		FVector MiddlePos = (Flag.BeginPosition + Flag.EndPosition) / 2;
@@ -249,7 +250,10 @@ void AFlagManager::NewCalculateIndividualVisionGroups()
 
 			FCollisionQueryParams QueryParams;
 			QueryParams.AddIgnoredActor(FlagActors[i]);
-
+			
+			if (UE::Geometry::Distance(TraceStart, TraceEnd) > GuardVisionRange)
+				continue;
+			
 			bool HasHitSomething = GetWorld()->LineTraceSingleByChannel(
 				Hit, TraceStart, TraceEnd, TraceChannelProperty,
 				QueryParams);
@@ -257,7 +261,9 @@ void AFlagManager::NewCalculateIndividualVisionGroups()
 			if (!HasHitSomething)
 			{
 				FlagActors[i]->AddToVisibilityGroup(j, false);
-				FlagActors[j]->AddToVisibilityGroup(i, false);;
+				FlagActors[i]->SOFlag->Segment.VisionArea += FlagActors[j]->SOFlag->Segment.Area;
+				FlagActors[j]->AddToVisibilityGroup(i, false);
+				FlagActors[j]->SOFlag->Segment.VisionArea += FlagActors[i]->SOFlag->Segment.Area;
 			}
 		}
 	}
