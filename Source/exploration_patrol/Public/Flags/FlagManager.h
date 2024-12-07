@@ -80,6 +80,8 @@ public:
 	ASkeletalNavMeshBoundsVolume* SkeletalNavMeshBoundsVolume;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug")
 	bool ShowVisionGroupDebugText = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Debug")
+	float GuardVisionRange = 750;
 
 	TArray<FDebugVisionGroup> DCurrentVisionDebug;
 };

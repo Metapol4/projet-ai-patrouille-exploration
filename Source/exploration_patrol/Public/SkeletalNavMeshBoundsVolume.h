@@ -67,6 +67,10 @@ public:
 	void FindGoldenPath();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="04ControlPanelGolden")
 	float MinimumPathLenght = 6000;
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="04ControlPanelGolden")
+	void FindSafeSegments();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="04ControlPanelGolden")
+	float PercentageSafeSegment = 5.0f;
 
 	TArray<int> GoldenPath;
 	int GoldenStartingFlagId, GoldenEndingFlagId;
@@ -97,24 +101,21 @@ public:
 	UPROPERTY(/*EditAnywhere,*/ BlueprintReadWrite, Category="06ControlPanelChallenge")
 	int PercentChanceOfMergingChallengeGroup = 50;
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
-	void PrintPathFromSourceId();
+	void ConstructChallengePaths();
+	
 	UFUNCTION()
 	bool AreSameChallengeGroup(int FlagA, int FlagB);
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
 	int NbOfChallenges = 3;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
-	int PathFromSourceIDDebug = 0;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
-	int MinimalKLenght = 0;
+	int MinimalKLenght = 1500;
 	UPROPERTY()
 	int KLenghtIterations;
 	UPROPERTY()
 	int MaxKLenghtIterationsMod = 10;
 
 	TArray<TArray<int>> ChallengeGroups;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
-	TArray<int> ChallengePath;
+	TArray<TArray<int>> ChallengePath;
 	
 	bool PathMoreThanKUtil(int Source, int KLenght, TArray<int> &Path, int& Goal);
 
