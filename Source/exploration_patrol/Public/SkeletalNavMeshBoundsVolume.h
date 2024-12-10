@@ -79,11 +79,11 @@ public:
 	/* Directionality */
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="05ControlPanelDirectionality")
 	void CalculateDebugDirectionnality();
-	
+
 	void CalculateDirectionnality(EFlagType FlagType);
-	
+
 	EFlagDirection GetAdditiveFlagDirection(EFlagDirection WantedDirection, EFlagDirection CurrentDirection);
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="05ControlPanelDirectionality")
 	float AngleTolerance = 45;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="05ControlPanelDirectionality")
@@ -91,33 +91,47 @@ public:
 
 	/* Challenge */
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	void GenerateOneGuardPath();
+	UFUNCTION(/*CallInEditor,*/ BlueprintCallable, Category="06ControlPanelChallenge")
 	void CreateChallenges();
 	UFUNCTION(/*CallInEditor, */BlueprintCallable, Category="06ControlPanelChallenge")
 	void LegacyCreateChallengeGroups();
 	UFUNCTION(/*CallInEditor, */BlueprintCallable, Category="06ControlPanelChallenge")
 	void LegacySelectAllChallengeSegments();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	UFUNCTION(/*CallInEditor,*/ BlueprintCallable, Category="06ControlPanelChallenge")
 	void PrintChallengeGroups();
 	UPROPERTY(/*EditAnywhere,*/ BlueprintReadWrite, Category="06ControlPanelChallenge")
 	int PercentChanceOfMergingChallengeGroup = 50;
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	UFUNCTION(/*CallInEditor,*/ BlueprintCallable, Category="06ControlPanelChallenge")
 	void ConstructChallengePaths();
-	
+
 	UFUNCTION()
 	bool AreSameChallengeGroup(int FlagA, int FlagB);
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+	UFUNCTION()
+	void FilterAndSortOutAltAndBidirectional(TArray<AFlagActor*>& TemporaryFlagList);
+	UFUNCTION()
+	bool CreateSourceNeighbourFromFilters(AFlagActor* SourceFlag, const TArray<int> Path, TArray<int>& OutSourceNeighbour);
+	UFUNCTION()
+	void SortByMostDesirableRatio(TArray<int>& OutSourceNeighbors, AFlagActor* Source);
+	UPROPERTY(/*EditAnywhere,*/ BlueprintReadWrite, Category="06ControlPanelChallenge")
 	int NbOfChallenges = 3;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
-	int MinimalKLenght = 1500;
+	int KLengthTarget = 1500;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+	int MinimalGuardPathLength = 1000;
 	UPROPERTY()
 	int KLenghtIterations;
 	UPROPERTY()
 	int MaxKLenghtIterationsMod = 10;
+	UPROPERTY()
+	int PercentageRandomStartingPointSelection = 10;
 
 	TArray<TArray<int>> ChallengeGroups;
 	TArray<TArray<int>> ChallengePath;
+
+	bool PathMoreThanKUtil(int Source, int KLenght, TArray<int>& Path, int& Goal);
 	
-	bool PathMoreThanKUtil(int Source, int KLenght, TArray<int> &Path, int& Goal);
+	bool GuardPathMoreThanKGenerator(int Source, int KLenght, FVector2d VERT, TArray<int>& Path, int& End);
 
 	UFUNCTION(BlueprintCallable, Category="06ControlPanelChallenge")
 	void LegacySelectChallengeSegments();
