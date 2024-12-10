@@ -1341,7 +1341,7 @@ void ASkeletalNavMeshBoundsVolume::SortByMostDesirableRatio(TArray<int>& OutSour
 			float AngleB = UE::Geometry::AngleD(SourceToNeighborB, SourceDirection);
 			AngleB = UKismetMathLibrary::Abs(AngleB);
 			
-			return AngleA < AngleB;
+			return AngleA > AngleB;
 		}
 	};
 	if(OutSourceNeighbors.Num() <= 0)
