@@ -11,9 +11,15 @@
 #include "NavMesh/RecastNavMesh.h"
 #include "SkeletalNavMeshBoundsVolume.generated.h"
 
-/**
- * 
- */
+USTRUCT(BlueprintType)
+struct FNeighbors
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere)
+	int ID = 0;
+	UPROPERTY(EditAnywhere)
+	float SortValue = 0;
+};
 
 UCLASS()
 class EXPLORATION_PATROL_API ASkeletalNavMeshBoundsVolume : public ANavMeshBoundsVolume
@@ -110,9 +116,9 @@ public:
 	UFUNCTION()
 	void FilterAndSortOutAltAndBidirectional(TArray<AFlagActor*>& TemporaryFlagList);
 	UFUNCTION()
-	bool CreateSourceNeighbourFromFilters(AFlagActor* SourceFlag, const TArray<int> Path, TArray<int>& OutSourceNeighbour);
+	bool CreateSourceNeighbourFromFilters(AFlagActor* SourceFlag, const TArray<int> Path, TArray<FNeighbors>& OutSourceNeighbour);
 	UFUNCTION()
-	void SortByMostDesirableRatio(TArray<int>& OutSourceNeighbors, AFlagActor* Source);
+	void SortByMostDesirableRatio(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source);
 	UPROPERTY(/*EditAnywhere,*/ BlueprintReadWrite, Category="06ControlPanelChallenge")
 	int NbOfChallenges = 3;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
@@ -124,7 +130,7 @@ public:
 	UPROPERTY()
 	int MaxKLenghtIterationsMod = 10;
 	UPROPERTY()
-	int PercentageRandomStartingPointSelection = 10;
+	float PercentageRandomStartingPointSelection = 10;
 
 	TArray<TArray<int>> ChallengeGroups;
 	TArray<TArray<int>> ChallengePath;
@@ -154,5 +160,10 @@ private:
 	float AStarHeuristique(int FlagId, int GoalFlagId);
 	float AStarAlgorithme(int StartFlagID, int EndFlagID, TArray<int>& BestPath);
 	float AStarPathReconstructor(TArray<int> CameFrom, int Start, int Goal, TArray<int>& ReconstructedPath);
+
+	TArray<int> FlagCurrentlySeen;
+	void AddAngleToSortValue(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source);
+	void AddVisionBonusToSortValue(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source);
+	
 	void DebugDirectionality(int FlagID);
 };
