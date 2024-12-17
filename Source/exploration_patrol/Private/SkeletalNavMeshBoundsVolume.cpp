@@ -740,10 +740,6 @@ void ASkeletalNavMeshBoundsVolume::FindPlayerPath()
 	PlayerPathMoreThanKUntilGoal(GoldenStartingFlagId, 6000, EvaluatedGuardPath,
 	                             GoldenEndingFlagId);
 
-	for (auto Element : EvaluatedGuardPath)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PLYRPTH: %d"), Element);
-	}
 	AStarPathReconstructor(EvaluatedGuardPath, GoldenStartingFlagId, GoldenEndingFlagId, ReconstructedChallengePath);
 
 
@@ -768,9 +764,11 @@ void ASkeletalNavMeshBoundsVolume::FindPlayerPath()
 
 void ASkeletalNavMeshBoundsVolume::CalculateGuardPathVisionTimeSteps()
 {
+	FVector LastDir;
 	for (TArray<int> CurrentChallenge : ChallengePath)
 	{
 		int Step = 0;
+		// forwards
 		for (int i = 0; i < CurrentChallenge.Num() - 1; i++)
 		{
 			AFlagActor* SelfFlag = FlagManager->GetFlagActor(CurrentChallenge[i]);
@@ -778,32 +776,17 @@ void ASkeletalNavMeshBoundsVolume::CalculateGuardPathVisionTimeSteps()
 
 			FVector SelfToNextDir = SelfFlag->GetActorLocation() - NextFlag->GetActorLocation();
 			SelfToNextDir.Normalize();
+			LastDir = SelfToNextDir;
 
-			TArray<int> SelfNeighbours = SelfFlag->SOFlag->Segment.VisibilityGroups;
-			for (int j = 0; j < SelfNeighbours.Num(); j++)
-			{
-				AFlagActor* Neighbour = FlagManager->GetFlagActor(SelfNeighbours[j]);
-				if (SelfNeighbours[j] == CurrentChallenge[i])
-				{
-					Neighbour->SOFlag->Segment.SeenAtTimeSteps.AddUnique(Step);
-					continue;
-				}
-
-				FVector SelfToNeighbour = SelfFlag->GetActorLocation() - Neighbour->GetActorLocation();
-				SelfToNeighbour.Normalize();
-				float EvaluatedAngle = UE::Geometry::AngleD(SelfToNextDir, SelfToNeighbour);
-				UE_LOG(LogTemp, Warning, TEXT("STEP : Step: %d, From: %d, to: %d, angle: %f"), Step,
-				       CurrentChallenge[i], SelfNeighbours[j], EvaluatedAngle)
-
-				if (EvaluatedAngle < AngleTolerance * 2)
-				{
-					Neighbour->SOFlag->Segment.SeenAtTimeSteps.AddUnique(Step);
-				}
-			}
+			CalculateNeighboursForTimeStep(SelfFlag, SelfToNextDir, Step);
 			Step++;
 		}
-		//last check
-
+		//last check forwards
+		AFlagActor* LastFlag = FlagManager->GetFlagActor(CurrentChallenge[CurrentChallenge.Num() - 1]);
+		CalculateNeighboursForTimeStep(LastFlag, LastDir, Step);
+		
+		UE_LOG(LogTemp, Warning, TEXT("-_-_-_-_-_-_-_-_-_-_-_-_End Of Forward-_-_-_-_-_-_-_-_-_-_-_-_-"));
+		// backwards
 		for (int i = CurrentChallenge.Num(); i-- > 1;)
 		{
 			AFlagActor* SelfFlag = FlagManager->GetFlagActor(CurrentChallenge[i]);
@@ -811,32 +794,39 @@ void ASkeletalNavMeshBoundsVolume::CalculateGuardPathVisionTimeSteps()
 
 			FVector SelfToNextDir = SelfFlag->GetActorLocation() - NextFlag->GetActorLocation();
 			SelfToNextDir.Normalize();
+			LastDir = SelfToNextDir;
 
-			TArray<int> SelfNeighbours = SelfFlag->SOFlag->Segment.VisibilityGroups;
-			for (int j = 0; j < SelfNeighbours.Num(); j++)
-			{
-				AFlagActor* Neighbour = FlagManager->GetFlagActor(SelfNeighbours[j]);
-				if (SelfNeighbours[j] == CurrentChallenge[i])
-				{
-					Neighbour->SOFlag->Segment.SeenAtTimeSteps.AddUnique(Step);
-					continue;
-				}
-
-				FVector SelfToNeighbour = SelfFlag->GetActorLocation() - Neighbour->GetActorLocation();
-				SelfToNeighbour.Normalize();
-				float EvaluatedAngle = UE::Geometry::AngleD(SelfToNextDir, SelfToNeighbour);
-				UE_LOG(LogTemp, Warning, TEXT("STEP : Step: %d, From: %d, to: %d, angle: %f"), Step,
-				       CurrentChallenge[i], SelfNeighbours[j], EvaluatedAngle)
-
-				if (EvaluatedAngle < AngleTolerance * 2)
-				{
-					Neighbour->SOFlag->Segment.SeenAtTimeSteps.AddUnique(Step);
-				}
-			}
+			CalculateNeighboursForTimeStep(SelfFlag, SelfToNextDir, Step);
 			Step++;
 		}
-		//last check
-		
+		//last check backwards
+		LastFlag = FlagManager->GetFlagActor(CurrentChallenge[0]);
+		CalculateNeighboursForTimeStep(LastFlag, LastDir, Step);
+	}
+}
+
+void ASkeletalNavMeshBoundsVolume::CalculateNeighboursForTimeStep(AFlagActor* SelfFlag, FVector Direction, int Step)
+{
+	TArray<int> SelfNeighbours = SelfFlag->SOFlag->Segment.VisibilityGroups;
+	for (int j = 0; j < SelfNeighbours.Num(); j++)
+	{
+		AFlagActor* Neighbour = FlagManager->GetFlagActor(SelfNeighbours[j]);
+		if (SelfNeighbours[j] == SelfFlag->SOFlag->Segment.id)
+		{
+			Neighbour->SOFlag->Segment.SeenAtTimeSteps.AddUnique(Step);
+			continue;
+		}
+
+		FVector SelfToNeighbour = SelfFlag->GetActorLocation() - Neighbour->GetActorLocation();
+		SelfToNeighbour.Normalize();
+		float EvaluatedAngle = UE::Geometry::AngleD(Direction, SelfToNeighbour);
+		UE_LOG(LogTemp, Warning, TEXT("STEP : Step: %d, From: %d, to: %d, angle: %f"), Step,
+			   SelfFlag->SOFlag->Segment.id, SelfNeighbours[j], EvaluatedAngle)
+
+		if (EvaluatedAngle < AngleTolerance * 2)
+		{
+			Neighbour->SOFlag->Segment.SeenAtTimeSteps.AddUnique(Step);
+		}
 	}
 }
 
@@ -1472,14 +1462,6 @@ bool ASkeletalNavMeshBoundsVolume::PlayerPathMoreThanKUntilGoal(int Source, int 
 		SourceNeighbors.Append(SourceFlag->SOFlag->BeginPointIds);
 	if (!HasPassedThroughEnd)
 		SourceNeighbors.Append(SourceFlag->SOFlag->EndPointIds);
-
-	for (auto SourceNeighbor : SourceNeighbors)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("KLENGTHPLYR: source neighbour %d"), SourceNeighbor);
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("|<--------------------------->|"));
-
 
 	for (int i = 0; i < SourceNeighbors.Num(); i++)
 	{
