@@ -122,15 +122,20 @@ public:
 	UPROPERTY(/*EditAnywhere,*/ BlueprintReadWrite, Category="06ControlPanelChallenge")
 	int NbOfChallenges = 3;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
-	int KLengthTarget = 1500;
+	float LinearWeight = 1.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+	float ExplorationWeight = 1.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+	float PercentageRandomStartingPointSelection = 50;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+	int KLengthTarget = 2500;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
 	int MinimalGuardPathLength = 1000;
 	UPROPERTY()
 	int KLenghtIterations;
 	UPROPERTY()
 	int MaxKLenghtIterationsMod = 10;
-	UPROPERTY()
-	float PercentageRandomStartingPointSelection = 10;
 
 	TArray<TArray<int>> ChallengeGroups;
 	TArray<TArray<int>> ChallengePath;
@@ -163,7 +168,7 @@ private:
 
 	TArray<int> FlagCurrentlySeen;
 	void AddAngleToSortValue(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source);
-	void AddVisionBonusToSortValue(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source);
+	void AddExplorationBonusToSortValue(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source, TArray<int>& CameFrom);
 	
 	void DebugDirectionality(int FlagID);
 };
