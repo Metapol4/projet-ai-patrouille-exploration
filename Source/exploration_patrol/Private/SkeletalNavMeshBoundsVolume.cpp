@@ -2,9 +2,7 @@
 
 #include "CookOnTheFly.h"
 #include "DataTypeUtils.h"
-#include "ToolContextInterfaces.h"
 #include "VectorTypes.h"
-#include "VideoRecordingSystem.h"
 #include "Kismet/KismetMathLibrary.h"
 
 void ASkeletalNavMeshBoundsVolume::GenerateAll()
@@ -22,7 +20,6 @@ void ASkeletalNavMeshBoundsVolume::GenerateAll()
 	PrintChallengeGroups();
 	*/
 }
-
 void ASkeletalNavMeshBoundsVolume::BeginPlay()
 {
 	Super::BeginPlay();
@@ -34,7 +31,6 @@ void ASkeletalNavMeshBoundsVolume::ClearDebugLine()
 {
 	FlushPersistentDebugLines(GetWorld());
 }
-
 void ASkeletalNavMeshBoundsVolume::ComputeGeometry()
 {
 	int CurrentID = 0;
@@ -143,7 +139,6 @@ void ASkeletalNavMeshBoundsVolume::ComputeGeometry()
 		}
 	}
 }
-
 void ASkeletalNavMeshBoundsVolume::ResetAllFlagTypes()
 {
 	ClearDebugLine();
@@ -153,18 +148,15 @@ void ASkeletalNavMeshBoundsVolume::ResetAllFlagTypes()
 		Element->SOFlag->Segment.PathType = EFlagPathType::NONE;
 	}
 }
-
 void ASkeletalNavMeshBoundsVolume::SendFlagBatch()
 {
 	if (FlagManager)
 		FlagManager->ReceiveSegmentBatch(FlagSegments);
 }
-
 void ASkeletalNavMeshBoundsVolume::CalculateVisionGroups()
 {
 	FlagManager->CalculateVisionGroups();
 }
-
 void ASkeletalNavMeshBoundsVolume::HighlightVisionGroupsFromList()
 {
 	if (DSVisionPathsToHighlight.Num() > 0)
@@ -173,7 +165,6 @@ void ASkeletalNavMeshBoundsVolume::HighlightVisionGroupsFromList()
 		FlagManager->ShowVisionGroupForActors(DSVisionPathsToHighlight);
 	}
 }
-
 void ASkeletalNavMeshBoundsVolume::FindGoldenPath()
 {
 	ClearDebugLine();
@@ -354,7 +345,6 @@ void ASkeletalNavMeshBoundsVolume::FindGoldenPath()
 		}
 	}
 }
-
 void ASkeletalNavMeshBoundsVolume::FindSafeSegments()
 {
 	ClearDebugLine();
@@ -686,6 +676,7 @@ void ASkeletalNavMeshBoundsVolume::LegacySelectChallengeSegments()
 void ASkeletalNavMeshBoundsVolume::GenerateOneGuardPath()
 {
 	ClearDebugLine();
+	
 	TArray<AFlagActor*> TemporaryFlagList = FlagManager->GetFlagActors();
 
 	FilterAndSortOutAltAndBidirectional(TemporaryFlagList);
@@ -714,7 +705,7 @@ void ASkeletalNavMeshBoundsVolume::GenerateOneGuardPath()
 	for (int ChallengePathID : ReconstructedChallengePath)
 	{
 		AFlagActor* ChallengeFlag = FlagManager->GetFlagActor(ChallengePathID);
-		FColor MainColor = FColor::Green;
+		FColor MainColor = FColor::Red;
 		if (ChallengePathID == StartingFlag)
 		{
 			MainColor = FColor::Red;
@@ -1058,7 +1049,6 @@ void ASkeletalNavMeshBoundsVolume::FilterAndSortOutAltAndBidirectional(TArray<AF
 	});
 }
 
-
 //GEOMETRY FUNCTION
 bool ASkeletalNavMeshBoundsVolume::NavPoly_GetAllPolys(TArray<NavNodeRef>& Polys)
 {
@@ -1183,7 +1173,7 @@ float ASkeletalNavMeshBoundsVolume::AStarPathReconstructor(TArray<int> CameFrom,
 			UE_LOG(LogTemp, Warning, TEXT("CHLG : FAIL AT %d"), GoalID);
 			return TotalPathLenght;
 		}
-		UE_LOG(LogTemp, Warning, TEXT("%d"), GoalID);
+		//UE_LOG(LogTemp, Warning, TEXT("%d"), GoalID);
 		ReconstructedPath.Add(GoalID);
 		auto Flag = FlagManager->GetFlagActor(GoalID);
 		if (GoalID != Goal)
@@ -1385,13 +1375,10 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 		return false;
 
 	//Calculate Priority
-	AddAngleToSortValue(SourceNeighbors, SourceFlag);
+	if (LinearWeight > 0)AddAngleToSortValue(SourceNeighbors, SourceFlag);
 
-	for (auto SeenFlag : SourceFlag->SOFlag->Segment.VisibilityGroups)
-	{
-		FlagCurrentlySeen[SeenFlag] = 1;
-	}
-	AddVisionBonusToSortValue(SourceNeighbors, SourceFlag);
+	if (ExplorationWeight > 0)	
+		AddExplorationBonusToSortValue(SourceNeighbors, SourceFlag, Path);
 
 	//Sort 
 	SourceNeighbors.Sort([](const FNeighbors& ip1, const FNeighbors& ip2)
@@ -1399,8 +1386,7 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 		return ip1.SortValue > ip2.SortValue;
 	});
 
-	//SortByMostDesirableRatio(SourceNeighbors, SourceFlag);
-
+	
 	for (int i = 0; i < SourceNeighbors.Num(); i++)
 	{
 		int NeighborsId = SourceNeighbors[i].ID;
@@ -1446,10 +1432,6 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 			return true;
 
 		Path[NeighborsId] = -1;
-		for (auto SeenFlag : SourceFlag->SOFlag->Segment.VisibilityGroups)
-		{
-			FlagCurrentlySeen[SeenFlag] = 0;
-		}
 	}
 	return false;
 }
@@ -1663,9 +1645,9 @@ void ASkeletalNavMeshBoundsVolume::AddAngleToSortValue(TArray<FNeighbors>& OutSo
 {
 	//Source Direction
 	FVector SourceDirection;
-	if (Source->SOFlag->BeginPointIds.Contains(OutSourceNeighbors[0].ID))
+	if (Source->SOFlag->EndPointIds.Contains(OutSourceNeighbors[0].ID))
 		SourceDirection = Source->SOFlag->Segment.EndPosition - Source->SOFlag->Segment.BeginPosition;
-	else if (Source->SOFlag->EndPointIds.Contains(OutSourceNeighbors[0].ID))
+	else if (Source->SOFlag->BeginPointIds.Contains(OutSourceNeighbors[0].ID))
 		SourceDirection = Source->SOFlag->Segment.BeginPosition - Source->SOFlag->Segment.EndPosition;
 	SourceDirection.Normalize();
 
@@ -1677,31 +1659,46 @@ void ASkeletalNavMeshBoundsVolume::AddAngleToSortValue(TArray<FNeighbors>& OutSo
 		SourceToNeighbor.Normalize();
 		float Angle = UE::Geometry::AngleD(SourceToNeighbor, SourceDirection);
 		Angle = UKismetMathLibrary::Abs(Angle);
-		OutSourceNeighbors[i].SortValue += Angle / 180.0f;
+		OutSourceNeighbors[i].SortValue += LinearWeight * (1.0f - (Angle / 180.0f));
 	}
 }
 
-void ASkeletalNavMeshBoundsVolume::AddVisionBonusToSortValue(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source)
+void ASkeletalNavMeshBoundsVolume::AddExplorationBonusToSortValue(TArray<FNeighbors>& OutSourceNeighbors,
+	AFlagActor* Source, TArray<int>& CameFrom)
 {
-	TArray<float> VisionAreaValue;
-	VisionAreaValue.Init(0, OutSourceNeighbors.Num());
+	TArray<float> NeighborsDistance;
+	NeighborsDistance.Init(0, OutSourceNeighbors.Num());
+float MaxValue = .0f;
+	
+	for (int i = 0; i < OutSourceNeighbors.Num(); i++)
+	{
+		//GetNeighbors
+		AFlagActor* NeighborFlag = FlagManager->GetFlagActor(OutSourceNeighbors[i].ID);
+		//Distance entre le neighbors et la source
+		float SourceToNeighbor = UE::Geometry::Distance(Source->GetActorLocation(), NeighborFlag->GetActorLocation());
+		//Add to distance value
+		NeighborsDistance[i] = SourceToNeighbor;
+		
+		//Remonte dans le came from depuis la source
+		int Cursor = Source->SOFlag->Segment.id;
+		int IterationCounter = 0;
+		constexpr int MaxIteration = 5;
+		while (CameFrom[Cursor] != Cursor || IterationCounter < MaxIteration)
+		{
+			IterationCounter++;
+			Cursor = CameFrom[Cursor];
+			AFlagActor* Flag = FlagManager->GetFlagActor(Cursor);
+			NeighborsDistance[i] += UE::Geometry::Distance(NeighborFlag->GetActorLocation(), Flag->GetActorLocation());
+		}
+
+		if (NeighborsDistance[i] > MaxValue)
+			MaxValue = NeighborsDistance[i];
+	}
+
 
 	for (int i = 0; i < OutSourceNeighbors.Num(); i++)
 	{
-		AFlagActor* NeighborsFlag = FlagManager->GetFlagActor(OutSourceNeighbors[i].ID);
-		for (auto Flag : NeighborsFlag->SOFlag->Segment.VisibilityGroups)
-		{
-			if (FlagCurrentlySeen[i] != 1)
-			{
-				AFlagActor* NewFlagActor = FlagManager->GetFlagActor(Flag);
-				VisionAreaValue[i] += NewFlagActor->SOFlag->Segment.Area;
-			}
-		}
-	}
-	float MaxValue = VisionAreaValue.Max();
-
-	for (int j = 0; j < OutSourceNeighbors.Num(); j++)
-	{
-		OutSourceNeighbors[j].SortValue += (VisionAreaValue[j] / MaxValue);
+		OutSourceNeighbors[i].SortValue += ExplorationWeight * NeighborsDistance[i] / MaxValue;
 	}
 }
+
