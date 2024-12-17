@@ -29,9 +29,12 @@ struct FFlagSegment
 	UPROPERTY(EditAnywhere)
 	TArray<int> VisibilityGroups;
 	UPROPERTY(EditAnywhere)
+	TArray<int> SeenAtTimeSteps;
+	UPROPERTY(EditAnywhere)
 	EFlagType FlagType = EFlagType::NONE;
 	UPROPERTY(EditAnywhere)
 	EFlagPathType PathType = EFlagPathType::NONE;
+
 };
 
 UCLASS()
@@ -59,6 +62,8 @@ public:
 	TArray<int> BeginPointIds;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<int> EndPointIds;
+	UFUNCTION()
+	TArray<int> GetCombinedNeighbours();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FFlagSegment Segment;
 	

@@ -105,7 +105,9 @@ public:
 	void GenerateOneGuardPath();
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
 	void FindPlayerPath();
-
+	
+	UFUNCTION()
+	void CalculateGuardPathVisionTimeSteps();
 	UFUNCTION(/*CallInEditor,*/ BlueprintCallable, Category="06ControlPanelChallenge")
 	void CreateChallenges();
 	UFUNCTION(/*CallInEditor, */BlueprintCallable, Category="06ControlPanelChallenge")

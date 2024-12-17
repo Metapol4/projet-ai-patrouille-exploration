@@ -710,6 +710,7 @@ void ASkeletalNavMeshBoundsVolume::GenerateOneGuardPath()
 	GuardPathMoreThanKGenerator(StartingFlag, KLengthTarget, FVector2d(1, 1), EvaluatedGuardPath, EndingFlag);
 
 	AStarPathReconstructor(EvaluatedGuardPath, StartingFlag, EndingFlag, ReconstructedChallengePath);
+	ChallengePath.Add(ReconstructedChallengePath);
 	for (int ChallengePathID : ReconstructedChallengePath)
 	{
 		AFlagActor* ChallengeFlag = FlagManager->GetFlagActor(ChallengePathID);
@@ -732,7 +733,9 @@ void ASkeletalNavMeshBoundsVolume::GenerateOneGuardPath()
 
 void ASkeletalNavMeshBoundsVolume::FindPlayerPath()
 {
-	ClearDebugLine();
+	//ClearDebugLine();
+
+	CalculateGuardPathVisionTimeSteps();
 
 	FindBeginAndEndFlags();
 
@@ -752,8 +755,8 @@ void ASkeletalNavMeshBoundsVolume::FindPlayerPath()
 	}
 	AStarPathReconstructor(EvaluatedGuardPath, GoldenStartingFlagId, GoldenEndingFlagId, ReconstructedChallengePath);
 
-	
-	for (int ChallengePathID : ReconstructedChallengePath)
+
+	/*for (int ChallengePathID : ReconstructedChallengePath)
 	{
 		AFlagActor* ChallengeFlag = FlagManager->GetFlagActor(ChallengePathID);
 		FColor MainColor = FColor::Green;
@@ -769,6 +772,80 @@ void ASkeletalNavMeshBoundsVolume::FindPlayerPath()
 			true,
 			300
 		);
+	}*/
+}
+
+void ASkeletalNavMeshBoundsVolume::CalculateGuardPathVisionTimeSteps()
+{
+	for (TArray<int> CurrentChallenge : ChallengePath)
+	{
+		int Step = 0;
+		for (int i = 0; i < CurrentChallenge.Num() - 1; i++)
+		{
+			AFlagActor* SelfFlag = FlagManager->GetFlagActor(CurrentChallenge[i]);
+			AFlagActor* NextFlag = FlagManager->GetFlagActor(CurrentChallenge[i + 1]);
+
+			FVector SelfToNextDir = SelfFlag->GetActorLocation() - NextFlag->GetActorLocation();
+			SelfToNextDir.Normalize();
+
+			TArray<int> SelfNeighbours = SelfFlag->SOFlag->Segment.VisibilityGroups;
+			for (int j = 0; j < SelfNeighbours.Num(); j++)
+			{
+				AFlagActor* Neighbour = FlagManager->GetFlagActor(SelfNeighbours[j]);
+				if (SelfNeighbours[j] == CurrentChallenge[i])
+				{
+					Neighbour->SOFlag->Segment.SeenAtTimeSteps.AddUnique(Step);
+					continue;
+				}
+
+				FVector SelfToNeighbour = SelfFlag->GetActorLocation() - Neighbour->GetActorLocation();
+				SelfToNeighbour.Normalize();
+				float EvaluatedAngle = UE::Geometry::AngleD(SelfToNextDir, SelfToNeighbour);
+				UE_LOG(LogTemp, Warning, TEXT("STEP : Step: %d, From: %d, to: %d, angle: %f"), Step,
+				       CurrentChallenge[i], SelfNeighbours[j], EvaluatedAngle)
+
+				if (EvaluatedAngle < AngleTolerance * 2)
+				{
+					Neighbour->SOFlag->Segment.SeenAtTimeSteps.AddUnique(Step);
+				}
+			}
+			Step++;
+		}
+		//last check
+
+		for (int i = CurrentChallenge.Num(); i-- > 1;)
+		{
+			AFlagActor* SelfFlag = FlagManager->GetFlagActor(CurrentChallenge[i]);
+			AFlagActor* NextFlag = FlagManager->GetFlagActor(CurrentChallenge[i - 1]);
+
+			FVector SelfToNextDir = SelfFlag->GetActorLocation() - NextFlag->GetActorLocation();
+			SelfToNextDir.Normalize();
+
+			TArray<int> SelfNeighbours = SelfFlag->SOFlag->Segment.VisibilityGroups;
+			for (int j = 0; j < SelfNeighbours.Num(); j++)
+			{
+				AFlagActor* Neighbour = FlagManager->GetFlagActor(SelfNeighbours[j]);
+				if (SelfNeighbours[j] == CurrentChallenge[i])
+				{
+					Neighbour->SOFlag->Segment.SeenAtTimeSteps.AddUnique(Step);
+					continue;
+				}
+
+				FVector SelfToNeighbour = SelfFlag->GetActorLocation() - Neighbour->GetActorLocation();
+				SelfToNeighbour.Normalize();
+				float EvaluatedAngle = UE::Geometry::AngleD(SelfToNextDir, SelfToNeighbour);
+				UE_LOG(LogTemp, Warning, TEXT("STEP : Step: %d, From: %d, to: %d, angle: %f"), Step,
+				       CurrentChallenge[i], SelfNeighbours[j], EvaluatedAngle)
+
+				if (EvaluatedAngle < AngleTolerance * 2)
+				{
+					Neighbour->SOFlag->Segment.SeenAtTimeSteps.AddUnique(Step);
+				}
+			}
+			Step++;
+		}
+		//last check
+		
 	}
 }
 
@@ -1462,7 +1539,7 @@ bool ASkeletalNavMeshBoundsVolume::PlayerPathMoreThanKUntilGoal(int Source, int 
 			Path[NeighborsId] = Source;
 			return true;
 		}*/
-		
+
 		// Goal reached, unfold all recursivity
 		if (NeighborsId == Goal)
 		{
