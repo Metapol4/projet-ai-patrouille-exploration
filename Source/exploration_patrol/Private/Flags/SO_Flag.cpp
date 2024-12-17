@@ -72,3 +72,10 @@ int USO_Flag::IsTouchingPathType(EFlagPathType PathType)
 
 	return NbOfSucceeds;
 }
+
+TArray<int> USO_Flag::GetCombinedNeighbours()
+{
+	TArray<int> Neighbours = TArray<int>(BeginPointIds);
+	Neighbours.Append(EndPointIds);
+	return Neighbours;
+}

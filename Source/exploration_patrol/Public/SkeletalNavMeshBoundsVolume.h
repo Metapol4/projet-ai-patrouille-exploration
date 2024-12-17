@@ -75,11 +75,16 @@ public:
 	float MinimumPathLenght = 6000;
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="04ControlPanelGolden")
 	void FindSafeSegments();
+	UFUNCTION()
+	void FindBeginAndEndFlags();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="04ControlPanelGolden")
 	float PercentageSafeSegment = 5.0f;
 
 	TArray<int> GoldenPath;
-	int GoldenStartingFlagId, GoldenEndingFlagId;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int GoldenStartingFlagId;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int GoldenEndingFlagId;
 	TArray<int> GoldenPathCopy;
 
 	/* Directionality */
@@ -98,6 +103,11 @@ public:
 	/* Challenge */
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
 	void GenerateOneGuardPath();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	void FindPlayerPath();
+	
+	UFUNCTION()
+	void CalculateGuardPathVisionTimeSteps();
 	UFUNCTION(/*CallInEditor,*/ BlueprintCallable, Category="06ControlPanelChallenge")
 	void CreateChallenges();
 	UFUNCTION(/*CallInEditor, */BlueprintCallable, Category="06ControlPanelChallenge")
@@ -116,7 +126,8 @@ public:
 	UFUNCTION()
 	void FilterAndSortOutAltAndBidirectional(TArray<AFlagActor*>& TemporaryFlagList);
 	UFUNCTION()
-	bool CreateSourceNeighbourFromFilters(AFlagActor* SourceFlag, const TArray<int> Path, TArray<FNeighbors>& OutSourceNeighbour);
+	bool CreateSourceNeighbourFromFilters(AFlagActor* SourceFlag, const TArray<int> Path,
+	                                      TArray<FNeighbors>& OutSourceNeighbour);
 	UFUNCTION()
 	void SortByMostDesirableRatio(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source);
 	UPROPERTY(/*EditAnywhere,*/ BlueprintReadWrite, Category="06ControlPanelChallenge")
@@ -141,8 +152,10 @@ public:
 	TArray<TArray<int>> ChallengePath;
 
 	bool PathMoreThanKUtil(int Source, int KLenght, TArray<int>& Path, int& Goal);
-	
+
 	bool GuardPathMoreThanKGenerator(int Source, int KLenght, FVector2d VERT, TArray<int>& Path, int& End);
+
+	bool PlayerPathMoreThanKUntilGoal(int Source, int KLenght, TArray<int>& Path, int& Goal);
 
 	UFUNCTION(BlueprintCallable, Category="06ControlPanelChallenge")
 	void LegacySelectChallengeSegments();
@@ -169,6 +182,5 @@ private:
 	TArray<int> FlagCurrentlySeen;
 	void AddAngleToSortValue(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source);
 	void AddExplorationBonusToSortValue(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source, TArray<int>& CameFrom);
-	
 	void DebugDirectionality(int FlagID);
 };
