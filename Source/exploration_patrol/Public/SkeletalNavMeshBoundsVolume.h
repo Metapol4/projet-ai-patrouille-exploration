@@ -106,6 +106,8 @@ public:
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
 	void GenerateGuardPathsUntilFail();
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	void SimulateCurrentConfiguration();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
 	void FindPlayerPathEditor();
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
 	bool FindPlayerPath();
@@ -119,6 +121,8 @@ public:
 	TArray<int> PopChallengePath();
 	UFUNCTION()
 	void EmptyChallengePath();
+	UFUNCTION()
+	void DrawNextStep(int MaxStep);
 	UFUNCTION()
 	void CalculateNeighboursForTimeStep(AFlagActor* SelfFlag, FVector Direction, int Step, int GuardPathId);
 	UFUNCTION(/*CallInEditor,*/ BlueprintCallable, Category="06ControlPanelChallenge")
@@ -164,6 +168,8 @@ public:
 	UPROPERTY()
 	int PlayerKLenghtIterations;
 	UPROPERTY()
+	int SimulationIterations;
+	UPROPERTY()
 	int MaxKLenghtIterationsMod = 10;
 
 	TArray<TArray<int>> ChallengeGroups;
@@ -206,4 +212,8 @@ private:
 	void DebugDirectionality(int FlagID);
 	
 	void FilterAllAlreadyInUse(TArray<AFlagActor*>& TemporaryFlagList);
+
+	FTimerHandle SimulationTimer;
+	FTimerDelegate SimulationDelegate;
+	float SimulationTimeStep = 0.75f;
 };

@@ -750,6 +750,101 @@ void ASkeletalNavMeshBoundsVolume::GenerateGuardPathsUntilFail()
 	DrawChallengePaths();
 }
 
+void ASkeletalNavMeshBoundsVolume::SimulateCurrentConfiguration()
+{
+	if (PlayerPath.IsEmpty())
+		return;
+	if (ChallengePath.IsEmpty())
+		return;
+	
+	int MaxTimeStep = PlayerPath.Num() - 1;
+	SimulationIterations = 0;
+	SimulationDelegate.BindUFunction(this, "DrawNextStep", MaxTimeStep);
+	GetWorld()->GetTimerManager().SetTimer(SimulationTimer, SimulationDelegate, SimulationTimeStep, true);
+}
+
+void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
+{
+	UE_LOG(LogTemp, Warning, TEXT("SIMUL : DRAW STEP # %d"), SimulationIterations)
+
+	if (!PlayerPath.IsEmpty() && !ChallengePath.IsEmpty())
+	{
+		//Draw Player Position
+		AFlagActor* PlayerFlag = FlagManager->GetFlagActor(PlayerPath[MaxStep - SimulationIterations]);
+		FVector PlayerPosition = PlayerFlag->GetActorLocation();
+		DrawDebugSphere(
+			GetWorld(),
+			PlayerPosition,
+			80.0f,
+			12,
+			FColor::Green,
+			false,
+			SimulationTimeStep * 0.95
+			);
+
+		//Draw Each Guard Position
+		for (auto GuardPath : ChallengePath)
+		{
+			if (GuardPath.IsEmpty())
+				continue;
+
+			// Create cursor
+			int Num = GuardPath.Num() - 1;
+			int Modulo = Num * 2;
+			int Cursor = SimulationIterations % Modulo;
+
+			// Adjust backward
+			if (Cursor > Num)
+			{
+				Cursor = 2*Num - Cursor;
+			}
+
+			//Get Guard Flag
+			AFlagActor* GuardFlag = FlagManager->GetFlagActor(GuardPath[Cursor]);
+			FVector GuardPosition = GuardFlag->GetActorLocation();
+
+			//Draw guard position
+			DrawDebugSphere(
+				GetWorld(),
+				GuardPosition,
+				80.0f,
+				12,
+				FColor::White,
+				false,
+				SimulationTimeStep * 0.95
+				);
+
+			//Guard direction
+			FVector GuardDirection = FVector(1,0,0);
+			
+			//Draw guard sight
+			DrawDebugCone(
+				GetWorld(),
+				GuardPosition,
+				GuardDirection,
+				FlagManager->GuardVisionRange,
+				45,
+				45,
+				12,
+				FColor::Red,
+				false,
+				SimulationTimeStep * 0.95,
+				0,
+				1.0f
+				);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("SIMUL : DRAW STEP # %d FAILED , LIST EMPTY"), SimulationIterations)
+	}
+	SimulationIterations++;
+	if (SimulationIterations > MaxStep)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(SimulationTimer);
+	}
+}
+
 void ASkeletalNavMeshBoundsVolume::FindPlayerPathEditor()
 {
 	FindPlayerPath();
@@ -898,6 +993,7 @@ void ASkeletalNavMeshBoundsVolume::EmptyChallengePath()
 		PopChallengePath();
 	}
 }
+
 
 void ASkeletalNavMeshBoundsVolume::CalculateNeighboursForTimeStep(AFlagActor* SelfFlag, FVector Direction, int Step,
                                                                   int GuardPathId)
