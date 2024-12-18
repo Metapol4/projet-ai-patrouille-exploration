@@ -95,3 +95,20 @@ void USO_Flag::AddTimeStep(int GuardPathId, int Step)
 	NewStepGroup.SeenAtTimeSteps.Add(Step);
 	Segment.StepGroups.Add(NewStepGroup);
 }
+
+void USO_Flag::RemoveTimeStepGroup(int GuardPathId)
+{
+	int IndexToRemove = -1;
+	for (int i = 0; i < Segment.StepGroups.Num(); i++)
+	{
+		if (Segment.StepGroups[i].GuardPathId == GuardPathId)
+		{
+			IndexToRemove = i;
+			break;
+		}
+	}
+	if (IndexToRemove >= 0)
+	{
+		Segment.StepGroups.RemoveAt(IndexToRemove);
+	}
+}

@@ -104,12 +104,21 @@ public:
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
 	void GenerateOneGuardPath();
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
-	void FindPlayerPath();
+	void GenerateGuardPathsUntilFail();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	void FindPlayerPathEditor();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	bool FindPlayerPath();
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
 	void DrawChallengePaths();
-	
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	void DrawLatestPlayerPath();
 	UFUNCTION()
 	void CalculateGuardPathVisionTimeSteps();
+	UFUNCTION()
+	TArray<int> PopChallengePath();
+	UFUNCTION()
+	void EmptyChallengePath();
 	UFUNCTION()
 	void CalculateNeighboursForTimeStep(AFlagActor* SelfFlag, FVector Direction, int Step, int GuardPathId);
 	UFUNCTION(/*CallInEditor,*/ BlueprintCallable, Category="06ControlPanelChallenge")
@@ -142,18 +151,25 @@ public:
 	float ExplorationWeight = 1.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
 	float PercentageRandomStartingPointSelection = 50;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+	FColor DGuardPathColor = FColor::Red;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
 	int KLengthTarget = 2500;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
-	int MinimalGuardPathLength = 1000;
+	int MaxGuardNb = 10;
 	UPROPERTY()
 	int KLenghtIterations;
+	UPROPERTY()
+	int GuardKLenghtIterations;
+	UPROPERTY()
+	int PlayerKLenghtIterations;
 	UPROPERTY()
 	int MaxKLenghtIterationsMod = 10;
 
 	TArray<TArray<int>> ChallengeGroups;
 	TArray<TArray<int>> ChallengePath;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+	TArray<int> PlayerPath;
 
 	bool PathMoreThanKUtil(int Source, int KLenght, TArray<int>& Path, int& Goal);
 
@@ -187,4 +203,6 @@ private:
 	void AddAngleToSortValue(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source);
 	void AddExplorationBonusToSortValue(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source, TArray<int>& CameFrom);
 	void DebugDirectionality(int FlagID);
+	
+	void FilterAllAlreadyInUse(TArray<AFlagActor*>& TemporaryFlagList);
 };
