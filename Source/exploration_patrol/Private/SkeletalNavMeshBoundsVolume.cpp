@@ -1368,15 +1368,10 @@ bool ASkeletalNavMeshBoundsVolume::PathMoreThanKUtil(int Source, int KLenght, TA
 bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int KLenght, FVector2d VERT,
                                                                TArray<int>& Path, int& End)
 {
-	/*security, prevent infinite stack*/
+
+	// SECURITY :  limit recursivity
 	KLenghtIterations++;
-	if (KLenghtIterations > MaxKLenghtIterationsMod * KLengthTarget)
-		return true;
-
-	// Target Lenght reached, unfold all recursivity
-	if (KLenght <= 0)
-		return true;
-
+	
 	TArray<FNeighbors> SourceNeighbors;
 	AFlagActor* SourceFlag = FlagManager->GetFlagActor(Source);
 
@@ -1404,10 +1399,13 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 		AFlagActor* Neighbour = FlagManager->GetFlagActor(NeighborsId);
 		int NeighborWeight = Neighbour->SOFlag->Segment.Lenght;
 
-		//Ignore if Neighbors already been use in this path
+		//GO TO NEXT NEIGHBORS ....
+
+		//	... if Neighbors already in path
 		if (Path[NeighborsId] != -1)
 			continue;
-		
+
+		// ... if Neighbors see a flag tagged SAFE
 		bool VisibilityFilter = false;
 		for (int j = 0; j < Neighbour->SOFlag->Segment.VisibilityGroups.Num(); j++)
 		{
@@ -1418,19 +1416,27 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 				break;
 			}
 		}
-
 		if (VisibilityFilter)
 			continue;
 		
-
-		//Length test with this Neighbors
+		// PATH COMPLETED ...
+		
+		//	... if K lenght reached with next neighbors
 		if (NeighborWeight >= KLenght)
 		{
 			End = NeighborsId;
 			Path[NeighborsId] = Source;
 			return true;
 		}
+		// ... if max iteration has been reached
+		if (KLenghtIterations > MaxKLenghtIterationsMod * KLengthTarget)
+		{
+			End = NeighborsId;
+			Path[NeighborsId] = Source;
+			return true;
+		}
 
+		// RECURSION 
 		Path[NeighborsId] = Source;
 
 		if (GuardPathMoreThanKGenerator(NeighborsId, KLenght - NeighborWeight, VERT, Path, End))
