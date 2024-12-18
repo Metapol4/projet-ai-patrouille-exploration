@@ -12,6 +12,7 @@ void ASkeletalNavMeshBoundsVolume::GenerateAll()
 	CalculateVisionGroups();
 	FindSafeSegments();
 	CalculateDirectionnality(EFlagType::SAFE);
+	GenerateGuardPathsUntilFail();
 	//CreateChallenges();
 	//FindGoldenPath();
 	/* OldChallenge selection
@@ -687,7 +688,7 @@ void ASkeletalNavMeshBoundsVolume::GenerateOneGuardPath()
 
 	FilterAndSortOutAltAndBidirectional(TemporaryFlagList);
 	FilterAllAlreadyInUse(TemporaryFlagList);
-	
+
 	int ListLimit =
 		UKismetMathLibrary::FFloor(TemporaryFlagList.Num() * (PercentageRandomStartingPointSelection / 100.0f));
 	if (ListLimit > TemporaryFlagList.Num())
@@ -733,16 +734,16 @@ void ASkeletalNavMeshBoundsVolume::GenerateGuardPathsUntilFail()
 			if (!ChallengePath.IsEmpty())
 			{
 				UE_LOG(LogTemp, Warning, TEXT("pop"));
-				PopChallengePath();				
+				PopChallengePath();
 			}
 		}
 		else
 			i = 0;
-		
+
 		Iterations++;
-		if(Iterations >= 1000)
+		if (Iterations >= 1000)
 			break;
-		if(ChallengePath.Num() >= MaxGuardNb && MaxGuardNb != 0)
+		if (ChallengePath.Num() >= MaxGuardNb && MaxGuardNb != 0)
 			break;
 	}
 	ClearDebugLine();
@@ -756,7 +757,7 @@ void ASkeletalNavMeshBoundsVolume::SimulateCurrentConfiguration()
 		return;
 	if (ChallengePath.IsEmpty())
 		return;
-	
+
 	int MaxTimeStep = PlayerPath.Num() - 1;
 	SimulationIterations = 0;
 	SimulationDelegate.BindUFunction(this, "DrawNextStep", MaxTimeStep);
@@ -780,7 +781,7 @@ void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 			FColor::Green,
 			false,
 			SimulationTimeStep * 0.95
-			);
+		);
 
 		//Draw Each Guard Position
 		for (auto GuardPath : ChallengePath)
@@ -796,7 +797,7 @@ void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 			// Adjust backward
 			if (Cursor > Num)
 			{
-				Cursor = 2*Num - Cursor;
+				Cursor = 2 * Num - Cursor;
 			}
 
 			//Get Guard Flag
@@ -812,11 +813,11 @@ void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 				FColor::White,
 				false,
 				SimulationTimeStep * 0.95
-				);
+			);
 
 			//Guard direction
-			FVector GuardDirection = FVector(1,0,0);
-			
+			FVector GuardDirection = FVector(1, 0, 0);
+
 			//Draw guard sight
 			DrawDebugCone(
 				GetWorld(),
@@ -831,7 +832,7 @@ void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 				SimulationTimeStep * 0.95,
 				0,
 				1.0f
-				);
+			);
 		}
 	}
 	else
@@ -885,14 +886,15 @@ void ASkeletalNavMeshBoundsVolume::DrawChallengePaths()
 {
 	for (TArray<int> CurrentChallenge : ChallengePath)
 	{
+		FColor MainColor;
+		MainColor.R = UKismetMathLibrary::RandomIntegerInRange(0, 255);
+		MainColor.G = UKismetMathLibrary::RandomIntegerInRange(0, 255);
+		MainColor.B = UKismetMathLibrary::RandomIntegerInRange(0, 255);
 		for (int ChallengePathID : CurrentChallenge)
 		{
 			AFlagActor* ChallengeFlag = FlagManager->GetFlagActor(ChallengePathID);
-			FColor MainColor = DGuardPathColor;
-			if (ChallengePathID == GoldenStartingFlagId)
-			{
+			if (UseDGuardPathColor)
 				MainColor = DGuardPathColor;
-			}
 			DrawDebugLine(
 				GetWorld(),
 				ChallengeFlag->SOFlag->Segment.BeginPosition,
@@ -1237,7 +1239,7 @@ void ASkeletalNavMeshBoundsVolume::FilterAllAlreadyInUse(TArray<AFlagActor*>& Te
 		for (auto FlagID : GuardPath)
 		{
 			AFlagActor* Flag = FlagManager->GetFlagActor(FlagID);
-			if(TemporaryFlagList.Contains(Flag))
+			if (TemporaryFlagList.Contains(Flag))
 			{
 				TemporaryFlagList.Remove(Flag);
 			}
@@ -1588,10 +1590,9 @@ bool ASkeletalNavMeshBoundsVolume::PathMoreThanKUtil(int Source, int KLenght, TA
 bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int KLenght, FVector2d VERT,
                                                                TArray<int>& Path, int& End)
 {
-
 	// SECURITY :  limit recursivity
 	GuardKLenghtIterations++;
-	
+
 	TArray<FNeighbors> SourceNeighbors;
 	AFlagActor* SourceFlag = FlagManager->GetFlagActor(Source);
 
@@ -1604,7 +1605,7 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 
 	if (ExplorationWeight > 0)
 		AddExplorationBonusToSortValue(SourceNeighbors, SourceFlag, Path);
-	
+
 	//Sort 
 	SourceNeighbors.Sort([](const FNeighbors& ip1, const FNeighbors& ip2)
 	{
@@ -1614,14 +1615,13 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 	//Test each neighbors in priority order
 	for (int i = 0; i < SourceNeighbors.Num(); i++)
 	{
-		
 		// Get Neighbors Actor
 		int NeighborsId = SourceNeighbors[i].ID;
 		AFlagActor* Neighbour = FlagManager->GetFlagActor(NeighborsId);
 		int NeighborWeight = Neighbour->SOFlag->Segment.Lenght;
 
 		//GO TO NEXT NEIGHBORS ...
-		
+
 		//	... if Neighbors already in path
 		if (Path[NeighborsId] != -1)
 			continue;
@@ -1655,9 +1655,9 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 			UE_LOG(LogTemp, Warning, TEXT("CONTINUE : OTHER GUARD AT : %d"), NeighborsId)
 			continue;
 		}
-		
+
 		// PATH COMPLETED ...
-		
+
 		//	... if K lenght reached with next neighbors
 		if (NeighborWeight >= KLenght)
 		{
@@ -1693,20 +1693,20 @@ bool ASkeletalNavMeshBoundsVolume::PlayerPathMoreThanKUntilGoal(int Source, int 
 
 	TArray<FNeighbors> SourceNeighbors;
 	AFlagActor* SourceFlag = FlagManager->GetFlagActor(Source);
-	
+
 	//Filter : Avoid backtracking 
 	if (!CreateSourceNeighbourFromFilters(SourceFlag, Path, SourceNeighbors))
 		return false;
 
 	//Calculate Priority
 	AddExitBonusToSortValue(SourceNeighbors);
-	
+
 	//Sort by Priority
 	SourceNeighbors.Sort([](const FNeighbors& ip1, const FNeighbors& ip2)
 	{
 		return ip1.SortValue > ip2.SortValue;
 	});
-	
+
 	for (int i = 0; i < SourceNeighbors.Num(); i++)
 	{
 		int NeighborsId = SourceNeighbors[i].ID;
@@ -1725,7 +1725,7 @@ bool ASkeletalNavMeshBoundsVolume::PlayerPathMoreThanKUntilGoal(int Source, int 
 					if (!ChallengePath[StepGroup.GuardPathId].IsEmpty())
 					{
 						int StepSize = ChallengePath[StepGroup.GuardPathId].Num() * 2;
-						int LocalStep = Step % StepSize;
+						int LocalStep = Step % StepSize; // off by one ?
 						VisibilityFilter = StepGroup.SeenAtTimeSteps.Contains(LocalStep);
 					}
 				}
@@ -1745,7 +1745,7 @@ bool ASkeletalNavMeshBoundsVolume::PlayerPathMoreThanKUntilGoal(int Source, int 
 			Path[NeighborsId] = Source;
 			return true;
 		}
-		
+
 		Path[NeighborsId] = Source;
 		if (PlayerPathMoreThanKUntilGoal(NeighborsId, Step + 1, Path, Goal))
 			return true;
@@ -1946,6 +1946,6 @@ void ASkeletalNavMeshBoundsVolume::AddExitBonusToSortValue(TArray<FNeighbors>& O
 
 	for (int i = 0; i < OutSourceNeighbors.Num(); i++)
 	{
-		OutSourceNeighbors[i].SortValue += 1 -(NeighborsDistance[i] / MaxValue);
+		OutSourceNeighbors[i].SortValue += 1 - (NeighborsDistance[i] / MaxValue);
 	}
 }

@@ -141,17 +141,20 @@ public:
 	void DrawNextStep(int MaxStep);
 	UFUNCTION()
 	void CalculateNeighboursForTimeStep(AFlagActor* SelfFlag, FVector Direction, int Step, int GuardPathId);
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Challenge")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Guards")
 	float LinearWeight = 1.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Challenge")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Guards")
 	float ExplorationWeight = 1.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Challenge")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Guards")
 	float PercentageRandomStartingPointSelection = 50;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Challenge")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Guards")
 	FColor DGuardPathColor = FColor::Red;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Challenge")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Guards")
+	bool UseDGuardPathColor = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Guards")
 	int KLengthTarget = 2500;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Challenge")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Guards")
 	int MaxGuardNb = 10;
 	UPROPERTY()
 	int KLenghtIterations;
