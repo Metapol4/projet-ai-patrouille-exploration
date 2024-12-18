@@ -770,7 +770,14 @@ void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 	if (!PlayerPath.IsEmpty() && !ChallengePath.IsEmpty())
 	{
 		//Draw Player Position
-		AFlagActor* PlayerFlag = FlagManager->GetFlagActor(PlayerPath[MaxStep - SimulationIterations]);
+		// Num - 1 -> 0; Num - 2 -> 0; 1er
+		int PlayerIndex = MaxStep - 1 - SimulationIterations;
+		if (PlayerIndex < 0)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Player index negative"))
+			return;
+		}
+		AFlagActor* PlayerFlag = FlagManager->GetFlagActor(PlayerPath[MaxStep - 1 - SimulationIterations]);
 		FVector PlayerPosition = PlayerFlag->GetActorLocation();
 		DrawDebugSphere(
 			GetWorld(),
@@ -789,18 +796,24 @@ void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 				continue;
 
 			// Create cursor
-			int Num = GuardPath.Num() - 1;
+			int Num = GuardPath.Num();
 			int Modulo = Num * 2;
-			int Cursor = SimulationIterations % Modulo;
-
+			
+			int CurrentCursor = SimulationIterations % Modulo;
+			int NextCursor = (SimulationIterations + 1) % Modulo;
+			
 			// Adjust backward
-			if (Cursor > Num)
+			if (CurrentCursor > Num - 1)
 			{
-				Cursor = 2*Num - Cursor;
+				CurrentCursor = 2*Num - CurrentCursor - 1;
+			}
+			if (NextCursor > Num - 1)
+			{
+				NextCursor = (2*Num) - NextCursor - 1;
 			}
 
 			//Get Guard Flag
-			AFlagActor* GuardFlag = FlagManager->GetFlagActor(GuardPath[Cursor]);
+			AFlagActor* GuardFlag = FlagManager->GetFlagActor(GuardPath[CurrentCursor]);
 			FVector GuardPosition = GuardFlag->GetActorLocation();
 
 			//Draw guard position
@@ -815,16 +828,19 @@ void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 				);
 
 			//Guard direction
-			FVector GuardDirection = FVector(1,0,0);
+			FVector GuardDirection = FVector(0,1,0);
+			AFlagActor* NextGuardFlag = FlagManager->GetFlagActor(GuardPath[NextCursor]);
+			FVector NextGuardPosition = NextGuardFlag->GetActorLocation();
+			GuardDirection = NextGuardPosition - GuardPosition;
 			
 			//Draw guard sight
 			DrawDebugCone(
 				GetWorld(),
-				GuardPosition,
+				GuardPosition + FVector(0, 0, 100),
 				GuardDirection,
-				FlagManager->GuardVisionRange,
-				45,
-				45,
+				750,
+				FMath::DegreesToRadians(45.0f),
+				FMath::DegreesToRadians(45.0f),
 				12,
 				FColor::Red,
 				false,
@@ -839,7 +855,7 @@ void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 		UE_LOG(LogTemp, Error, TEXT("SIMUL : DRAW STEP # %d FAILED , LIST EMPTY"), SimulationIterations)
 	}
 	SimulationIterations++;
-	if (SimulationIterations > MaxStep)
+	if (SimulationIterations >= MaxStep)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(SimulationTimer);
 	}
