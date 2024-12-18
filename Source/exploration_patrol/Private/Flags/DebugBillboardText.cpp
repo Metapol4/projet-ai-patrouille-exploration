@@ -19,7 +19,7 @@ ADebugBillboardText::ADebugBillboardText()
 	TextComponent->SetVerticalAlignment(EVRTA_TextCenter);
 	TextComponent->SetTextRenderColor(FColor::Black);
 	TextComponent->SetWorldSize(100.0f); // Adjust to your preference
-	TextComponent->SetText(FText::FromString("Debug Text Here"));
+	TextComponent->SetText(FText::FromString(""));
 	UMaterial* mat = ConstructorHelpers::FObjectFinder<UMaterial>(TEXT("Material'/Game/Flags/BillboardText'")).
 		Object;
 	if (mat)
@@ -41,4 +41,23 @@ void ADebugBillboardText::Tick(float DeltaTime)
 void ADebugBillboardText::SetText(FString Text)
 {
 	TextComponent->SetText(FText::FromString(Text));
+}
+
+void ADebugBillboardText::SetTextColor(FColor Color)
+{
+	TextComponent->TextRenderColor = Color;
+}
+
+void ADebugBillboardText::AddText(FString Text)
+{
+	FString Current = TextComponent->Text.ToString();
+	if (Current.IsEmpty())
+		SetText(Text);
+	else
+		SetText(Current + "-" + Text);
+}
+
+void ADebugBillboardText::ResetText()
+{
+	TextComponent->SetText(FText::FromString(""));
 }

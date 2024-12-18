@@ -9,24 +9,37 @@
 #include "Flags/DebugBillboardText.h"
 #include "FlagActor.generated.h"
 
+
+
 UCLASS()
 class EXPLORATION_PATROL_API AFlagActor : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	AFlagActor();
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-public:	
+
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	USO_Flag* SOFlag;
 	ADebugBillboardText* VisibilityGroupText;
 	void DrawDebugSegmentFlag();
-
+	void AddToVisibilityGroup(int Group,bool UpdateText = true);
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	void SeeVisionGroup();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="01ControlPanel")
+	bool AdditiveToDebug = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="01ControlPanel")
+	FColor DVisionGroupColour = FColor::Yellow;
+	UFUNCTION()
+	void ResetText();
+	UFUNCTION()
+	void SetVisionGroupText();
 };

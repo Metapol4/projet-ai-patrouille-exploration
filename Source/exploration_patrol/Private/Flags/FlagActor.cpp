@@ -4,30 +4,24 @@
 #include "Flags/FlagActor.h"
 
 #include "Components/TextRenderComponent.h"
+#include "Flags/FlagManager.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AFlagActor::AFlagActor()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	SOFlag = CreateDefaultSubobject<USO_Flag>("Flag");
-	// Create a static mesh component
 	UStaticMeshComponent* cubeMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Cube"));
 
-	// Load the Cube mesh
 	UStaticMesh* cubeMesh = ConstructorHelpers::FObjectFinder<UStaticMesh>(
 		TEXT("StaticMesh'/Engine/BasicShapes/Cube.Cube'")).Object;
-
-	// Set the component's mesh
 	cubeMeshComponent->SetStaticMesh(cubeMesh);
 
 	cubeMeshComponent->SetWorldScale3D(FVector(0.25f, 0.25f, 0.25f));
+	cubeMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	// Set as root component
 	RootComponent = cubeMeshComponent;
-
-	/*VisibilityGroupText->SetText(FText::FromString("0"));
-	VisibilityGroupText = CreateDefaultSubobject<UTextRenderComponent>("Visibility Group Text");*/
 }
 
 // Called when the game starts or when spawned
@@ -50,5 +44,37 @@ void AFlagActor::DrawDebugSegmentFlag()
 	VisibilityGroupText = GetWorld()->SpawnActor<ADebugBillboardText>(ADebugBillboardText::StaticClass(),
 	                                                                  GetActorLocation() + FVector(0, 0, 50),
 	                                                                  FRotator::ZeroRotator);
-	VisibilityGroupText->SetText("0"); // TODO: VISIBILITY NUMBER HERE
+}
+
+void AFlagActor::AddToVisibilityGroup(int Group, bool UpdateText)
+{
+	SOFlag->Segment.VisibilityGroups.Add(Group);
+	if (UpdateText)
+		VisibilityGroupText->AddText(FString::FromInt(Group));
+}
+
+void AFlagActor::SeeVisionGroup()
+{
+	auto manager = UGameplayStatics::GetActorOfClass(GetWorld(), AFlagManager::StaticClass());
+	AFlagManager* FlagManager = Cast<AFlagManager>(manager);
+	FDebugVisionGroup DebugInfo;
+	DebugInfo.id = SOFlag->Segment.id;
+	DebugInfo.Color = DVisionGroupColour;
+	if (!AdditiveToDebug)
+		FlagManager->ShowVisionGroupForActor(DebugInfo);
+	else
+	{
+		FlagManager->AddToShowVisionGroupActor(DebugInfo);
+	}
+}
+
+void AFlagActor::ResetText()
+{
+	VisibilityGroupText->ResetText();
+}
+
+void AFlagActor::SetVisionGroupText()
+{
+	VisibilityGroupText->SetText(FString::FromInt(SOFlag->Segment.id));
+	VisibilityGroupText->SetTextColor(DVisionGroupColour);
 }
