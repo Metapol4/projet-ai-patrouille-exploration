@@ -717,15 +717,16 @@ void ASkeletalNavMeshBoundsVolume::GenerateOneGuardPath()
 
 void ASkeletalNavMeshBoundsVolume::GenerateGuardPathsUntilFail()
 {
-	while (FindPlayerPath())
+	/*while (FindPlayerPath())
 	{
 		GenerateOneGuardPath();
 	}
 	ClearDebugLine();
-	ChallengePath.Pop();
+	if (!ChallengePath.IsEmpty())
+		ChallengePath.Pop();
 	DrawChallengePaths();
-	DrawLatestPlayerPath();
-	/*for (int i = 0; i < 5; i++)
+	DrawLatestPlayerPath();*/
+	for (int i = 0; i < 5; i++)
 	{
 		GenerateOneGuardPath();
 		bool Success = FindPlayerPath();
@@ -734,14 +735,18 @@ void ASkeletalNavMeshBoundsVolume::GenerateGuardPathsUntilFail()
 			if (!ChallengePath.IsEmpty())
 			{
 				UE_LOG(LogTemp, Warning, TEXT("pop"));
-				ChallengePath.Pop();
+				PopChallengePath();				
 			}
 		}
 		else
 		{
 			i = 0;
 		}
-	}*/
+	}
+	FindPlayerPath();
+	ClearDebugLine();
+	DrawLatestPlayerPath();
+	DrawChallengePaths();
 }
 
 bool ASkeletalNavMeshBoundsVolume::FindPlayerPath()
@@ -863,6 +868,17 @@ void ASkeletalNavMeshBoundsVolume::CalculateGuardPathVisionTimeSteps()
 		CalculateNeighboursForTimeStep(LastFlag, LastDir, Step, PathIndex);
 		Step++;
 	}
+}
+
+void ASkeletalNavMeshBoundsVolume::PopChallengePath()
+{
+	int PathId = ChallengePath.Num() - 1;
+	TArray<int> PoppedPath = ChallengePath[PathId];
+	for (AFlagActor* ChallengePathFlag : FlagManager->GetFlagActors())
+	{
+		ChallengePathFlag->SOFlag->RemoveTimeStepGroup(PathId);
+	}
+	ChallengePath.RemoveAt(PathId);
 }
 
 void ASkeletalNavMeshBoundsVolume::CalculateNeighboursForTimeStep(AFlagActor* SelfFlag, FVector Direction, int Step,
@@ -1519,8 +1535,8 @@ bool ASkeletalNavMeshBoundsVolume::PlayerPathMoreThanKUntilGoal(int Source, int 
 		SourceNeighbors.Append(SourceFlag->SOFlag->BeginPointIds);
 	if (!HasPassedThroughEnd)
 		SourceNeighbors.Append(SourceFlag->SOFlag->EndPointIds);
-
-	/*if (SourceNeighbors.Num() > 0)
+/*
+	if (SourceNeighbors.Num() > 0)
 	{
 		int32 LastIndex = SourceNeighbors.Num() - 1;
 		for (int32 i = 0; i <= LastIndex; ++i)
@@ -1531,8 +1547,8 @@ bool ASkeletalNavMeshBoundsVolume::PlayerPathMoreThanKUntilGoal(int Source, int 
 				SourceNeighbors.Swap(i, Index);
 			}
 		}
-	}*/
-
+	}
+*/
 	for (int i = 0; i < SourceNeighbors.Num(); i++)
 	{
 		int NeighborsId = SourceNeighbors[i];

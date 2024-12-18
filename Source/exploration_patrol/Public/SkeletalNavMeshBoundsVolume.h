@@ -114,6 +114,8 @@ public:
 	UFUNCTION()
 	void CalculateGuardPathVisionTimeSteps();
 	UFUNCTION()
+	void PopChallengePath();
+	UFUNCTION()
 	void CalculateNeighboursForTimeStep(AFlagActor* SelfFlag, FVector Direction, int Step, int GuardPathId);
 	UFUNCTION(/*CallInEditor,*/ BlueprintCallable, Category="06ControlPanelChallenge")
 	void CreateChallenges();

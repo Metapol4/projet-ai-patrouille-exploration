@@ -68,6 +68,8 @@ public:
 	TArray<int> GetCombinedNeighbours();
 	UFUNCTION()
 	void AddTimeStep(int GuardPathId, int Step);
+	UFUNCTION()
+	void RemoveTimeStepGroup(int GuardPathId);
 	UPROPERTY()
 	TArray<USO_Flag*> BeginPointConnections;
 	UPROPERTY()
