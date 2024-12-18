@@ -3,6 +3,7 @@
 #include "CookOnTheFly.h"
 #include "DataTypeUtils.h"
 #include "VectorTypes.h"
+#include "Interfaces/Interface_BoneReferenceSkeletonProvider.h"
 #include "Kismet/KismetMathLibrary.h"
 
 void ASkeletalNavMeshBoundsVolume::GenerateAll()
@@ -771,7 +772,14 @@ void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 	if (!PlayerPath.IsEmpty() && !ChallengePath.IsEmpty())
 	{
 		//Draw Player Position
-		AFlagActor* PlayerFlag = FlagManager->GetFlagActor(PlayerPath[MaxStep - SimulationIterations]);
+		// Num - 1 -> 0; Num - 2 -> 0; 1er
+		int PlayerIndex = MaxStep - SimulationIterations;
+		if (PlayerIndex < 0)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Player index negative"))
+			return;
+		}
+		AFlagActor* PlayerFlag = FlagManager->GetFlagActor(PlayerPath[PlayerIndex]);
 		FVector PlayerPosition = PlayerFlag->GetActorLocation();
 		DrawDebugSphere(
 			GetWorld(),
@@ -784,24 +792,38 @@ void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 		);
 
 		//Draw Each Guard Position
+		int iterator = 0;
+		FlagManager->ResetAllDebugTexts();
 		for (auto GuardPath : ChallengePath)
 		{
 			if (GuardPath.IsEmpty())
 				continue;
 
 			// Create cursor
-			int Num = GuardPath.Num() - 1;
+			int Num = GuardPath.Num();
 			int Modulo = Num * 2;
-			int Cursor = SimulationIterations % Modulo;
-
+			
+			int CurrentCursor = SimulationIterations % Modulo;
+			int NextCursor = (SimulationIterations + 1) % Modulo;
+			
 			// Adjust backward
-			if (Cursor > Num)
+			if (CurrentCursor > Num - 1)
 			{
-				Cursor = 2 * Num - Cursor;
+				CurrentCursor = 2 * Num - CurrentCursor - 1;
+			}
+			if (NextCursor > Num - 1)
+			{
+				NextCursor = (2*Num) - NextCursor - 1;
 			}
 
 			//Get Guard Flag
-			AFlagActor* GuardFlag = FlagManager->GetFlagActor(GuardPath[Cursor]);
+			AFlagActor* GuardFlag = FlagManager->GetFlagActor(GuardPath[CurrentCursor]);
+			FString MainText = "Guard " + FString::FromInt(iterator);
+			GuardFlag->VisibilityGroupText->SetText(MainText);
+			FString AdditiveText = FString::FromInt(CurrentCursor) +  " / " + FString::FromInt(GuardPath.Num());
+			GuardFlag->VisibilityGroupText->AddText(AdditiveText);
+			GuardFlag->VisibilityGroupText->SetTextColor(FColor::Yellow);
+			
 			FVector GuardPosition = GuardFlag->GetActorLocation();
 
 			//Draw guard position
@@ -816,16 +838,19 @@ void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 			);
 
 			//Guard direction
-			FVector GuardDirection = FVector(1, 0, 0);
-
+			FVector GuardDirection = FVector( 0, 1,0);
+AFlagActor* NextGuardFlag = FlagManager->GetFlagActor(GuardPath[NextCursor]);
+			FVector NextGuardPosition = NextGuardFlag->GetActorLocation();
+			GuardDirection = NextGuardPosition - GuardPosition;
+			
 			//Draw guard sight
 			DrawDebugCone(
 				GetWorld(),
-				GuardPosition,
+				GuardPosition + FVector(0, 0, 100),
 				GuardDirection,
-				FlagManager->GuardVisionRange,
-				45,
-				45,
+				750,
+				FMath::DegreesToRadians(45.0f),
+				FMath::DegreesToRadians(45.0f),
 				12,
 				FColor::Red,
 				false,
@@ -833,6 +858,7 @@ void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 				0,
 				1.0f
 			);
+			iterator++;
 		}
 	}
 	else
@@ -840,7 +866,7 @@ void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 		UE_LOG(LogTemp, Error, TEXT("SIMUL : DRAW STEP # %d FAILED , LIST EMPTY"), SimulationIterations)
 	}
 	SimulationIterations++;
-	if (SimulationIterations > MaxStep)
+	if (SimulationIterations >= MaxStep)
 	{
 		GetWorld()->GetTimerManager().ClearTimer(SimulationTimer);
 	}
@@ -867,7 +893,7 @@ bool ASkeletalNavMeshBoundsVolume::FindPlayerPath()
 
 	TArray<int> ReconstructedChallengePath;
 	PlayerKLenghtIterations = 0;
-	PlayerPathMoreThanKUntilGoal(GoldenStartingFlagId, 0, EvaluatedGuardPath,
+	PlayerPathMoreThanKUntilGoal(GoldenStartingFlagId, 1, EvaluatedGuardPath,
 	                             GoldenEndingFlagId);
 
 	float Success = AStarPathReconstructor(EvaluatedGuardPath, GoldenStartingFlagId, GoldenEndingFlagId,
@@ -950,14 +976,16 @@ void ASkeletalNavMeshBoundsVolume::CalculateGuardPathVisionTimeSteps()
 			CalculateNeighboursForTimeStep(SelfFlag, SelfToNextDir, Step, PathIndex);
 			Step++;
 		}
+		//Step 11
 		//last check forwards
 		AFlagActor* LastFlag = FlagManager->GetFlagActor(CurrentChallenge[CurrentChallenge.Num() - 1]);
 		CalculateNeighboursForTimeStep(LastFlag, LastDir, Step, PathIndex);
 		Step++;
+		//Step 12
 
 		//UE_LOG(LogTemp, Warning, TEXT("-_-_-_-_-_-_-_-_-_-_-_-_End Of Forward-_-_-_-_-_-_-_-_-_-_-_-_-"));
 		// backwards
-		for (int i = CurrentChallenge.Num(); i-- > 1;)
+		for (int i = CurrentChallenge.Num() - 1; i > 0; i--)
 		{
 			AFlagActor* SelfFlag = FlagManager->GetFlagActor(CurrentChallenge[i]);
 			AFlagActor* NextFlag = FlagManager->GetFlagActor(CurrentChallenge[i - 1]);
@@ -969,6 +997,7 @@ void ASkeletalNavMeshBoundsVolume::CalculateGuardPathVisionTimeSteps()
 			CalculateNeighboursForTimeStep(SelfFlag, SelfToNextDir, Step, PathIndex);
 			Step++;
 		}
+		//Step 23
 		//last check backwards
 		LastFlag = FlagManager->GetFlagActor(CurrentChallenge[0]);
 		CalculateNeighboursForTimeStep(LastFlag, LastDir, Step, PathIndex);
@@ -1726,7 +1755,11 @@ bool ASkeletalNavMeshBoundsVolume::PlayerPathMoreThanKUntilGoal(int Source, int 
 					{
 						int StepSize = ChallengePath[StepGroup.GuardPathId].Num() * 2;
 						int LocalStep = Step % StepSize; // off by one ?
-						VisibilityFilter = StepGroup.SeenAtTimeSteps.Contains(LocalStep);
+						if(StepGroup.SeenAtTimeSteps.Contains(LocalStep))
+						{
+							VisibilityFilter = true;
+							break;
+						}
 					}
 				}
 			}
@@ -1745,7 +1778,9 @@ bool ASkeletalNavMeshBoundsVolume::PlayerPathMoreThanKUntilGoal(int Source, int 
 			Path[NeighborsId] = Source;
 			return true;
 		}
-
+// self ->N1 ->N2 -> N3 -> GOAL
+		// self -> 0 -> 1 -> 2 -> 3
+		// 0 -> 1 -> 2 -> 3 -> 4
 		Path[NeighborsId] = Source;
 		if (PlayerPathMoreThanKUntilGoal(NeighborsId, Step + 1, Path, Goal))
 			return true;

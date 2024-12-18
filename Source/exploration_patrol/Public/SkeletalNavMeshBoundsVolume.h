@@ -221,5 +221,5 @@ private:
 
 	FTimerHandle SimulationTimer;
 	FTimerDelegate SimulationDelegate;
-	float SimulationTimeStep = 0.75f;
+	float SimulationTimeStep = 2.0f;
 };
