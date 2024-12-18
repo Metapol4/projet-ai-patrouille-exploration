@@ -3,6 +3,7 @@
 #include "CookOnTheFly.h"
 #include "DataTypeUtils.h"
 #include "VectorTypes.h"
+#include "Interfaces/Interface_BoneReferenceSkeletonProvider.h"
 #include "Kismet/KismetMathLibrary.h"
 
 void ASkeletalNavMeshBoundsVolume::GenerateAll()
@@ -771,13 +772,13 @@ void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 	{
 		//Draw Player Position
 		// Num - 1 -> 0; Num - 2 -> 0; 1er
-		int PlayerIndex = MaxStep - 1 - SimulationIterations;
+		int PlayerIndex = MaxStep - SimulationIterations;
 		if (PlayerIndex < 0)
 		{
 			UE_LOG(LogTemp, Error, TEXT("Player index negative"))
 			return;
 		}
-		AFlagActor* PlayerFlag = FlagManager->GetFlagActor(PlayerPath[MaxStep - 1 - SimulationIterations]);
+		AFlagActor* PlayerFlag = FlagManager->GetFlagActor(PlayerPath[PlayerIndex]);
 		FVector PlayerPosition = PlayerFlag->GetActorLocation();
 		DrawDebugSphere(
 			GetWorld(),
@@ -790,6 +791,8 @@ void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 			);
 
 		//Draw Each Guard Position
+		int iterator = 0;
+		FlagManager->ResetAllDebugTexts();
 		for (auto GuardPath : ChallengePath)
 		{
 			if (GuardPath.IsEmpty())
@@ -814,6 +817,12 @@ void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 
 			//Get Guard Flag
 			AFlagActor* GuardFlag = FlagManager->GetFlagActor(GuardPath[CurrentCursor]);
+			FString MainText = "Guard " + FString::FromInt(iterator);
+			GuardFlag->VisibilityGroupText->SetText(MainText);
+			FString AdditiveText = FString::FromInt(CurrentCursor) +  " / " + FString::FromInt(GuardPath.Num());
+			GuardFlag->VisibilityGroupText->AddText(AdditiveText);
+			GuardFlag->VisibilityGroupText->SetTextColor(FColor::Yellow);
+			
 			FVector GuardPosition = GuardFlag->GetActorLocation();
 
 			//Draw guard position
@@ -848,6 +857,7 @@ void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 				0,
 				1.0f
 				);
+			iterator++;
 		}
 	}
 	else
@@ -882,7 +892,7 @@ bool ASkeletalNavMeshBoundsVolume::FindPlayerPath()
 
 	TArray<int> ReconstructedChallengePath;
 	PlayerKLenghtIterations = 0;
-	PlayerPathMoreThanKUntilGoal(GoldenStartingFlagId, 0, EvaluatedGuardPath,
+	PlayerPathMoreThanKUntilGoal(GoldenStartingFlagId, 1, EvaluatedGuardPath,
 	                             GoldenEndingFlagId);
 
 	float Success = AStarPathReconstructor(EvaluatedGuardPath, GoldenStartingFlagId, GoldenEndingFlagId,
@@ -964,14 +974,16 @@ void ASkeletalNavMeshBoundsVolume::CalculateGuardPathVisionTimeSteps()
 			CalculateNeighboursForTimeStep(SelfFlag, SelfToNextDir, Step, PathIndex);
 			Step++;
 		}
+		//Step 11
 		//last check forwards
 		AFlagActor* LastFlag = FlagManager->GetFlagActor(CurrentChallenge[CurrentChallenge.Num() - 1]);
 		CalculateNeighboursForTimeStep(LastFlag, LastDir, Step, PathIndex);
 		Step++;
+		//Step 12
 
 		//UE_LOG(LogTemp, Warning, TEXT("-_-_-_-_-_-_-_-_-_-_-_-_End Of Forward-_-_-_-_-_-_-_-_-_-_-_-_-"));
 		// backwards
-		for (int i = CurrentChallenge.Num(); i-- > 1;)
+		for (int i = CurrentChallenge.Num() - 1; i > 0; i--)
 		{
 			AFlagActor* SelfFlag = FlagManager->GetFlagActor(CurrentChallenge[i]);
 			AFlagActor* NextFlag = FlagManager->GetFlagActor(CurrentChallenge[i - 1]);
@@ -983,6 +995,7 @@ void ASkeletalNavMeshBoundsVolume::CalculateGuardPathVisionTimeSteps()
 			CalculateNeighboursForTimeStep(SelfFlag, SelfToNextDir, Step, PathIndex);
 			Step++;
 		}
+		//Step 23
 		//last check backwards
 		LastFlag = FlagManager->GetFlagActor(CurrentChallenge[0]);
 		CalculateNeighboursForTimeStep(LastFlag, LastDir, Step, PathIndex);
@@ -1742,7 +1755,11 @@ bool ASkeletalNavMeshBoundsVolume::PlayerPathMoreThanKUntilGoal(int Source, int 
 					{
 						int StepSize = ChallengePath[StepGroup.GuardPathId].Num() * 2;
 						int LocalStep = Step % StepSize;
-						VisibilityFilter = StepGroup.SeenAtTimeSteps.Contains(LocalStep);
+						if(StepGroup.SeenAtTimeSteps.Contains(LocalStep))
+						{
+							VisibilityFilter = true;
+							break;
+						}
 					}
 				}
 			}
@@ -1761,7 +1778,9 @@ bool ASkeletalNavMeshBoundsVolume::PlayerPathMoreThanKUntilGoal(int Source, int 
 			Path[NeighborsId] = Source;
 			return true;
 		}
-		
+		// self ->N1 ->N2 -> N3 -> GOAL
+		// self -> 0 -> 1 -> 2 -> 3
+		// 0 -> 1 -> 2 -> 3 -> 4
 		Path[NeighborsId] = Source;
 		if (PlayerPathMoreThanKUntilGoal(NeighborsId, Step + 1, Path, Goal))
 			return true;
