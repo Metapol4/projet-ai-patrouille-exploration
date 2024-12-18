@@ -145,7 +145,8 @@ public:
 	float ExplorationWeight = 1.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
 	float PercentageRandomStartingPointSelection = 50;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+	FColor DGuardPathColor = FColor::Red;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
 	int KLengthTarget = 2500;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
@@ -191,4 +192,6 @@ private:
 	void AddAngleToSortValue(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source);
 	void AddExplorationBonusToSortValue(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source, TArray<int>& CameFrom);
 	void DebugDirectionality(int FlagID);
+	
+	void FilterAllAlreadyInUse(TArray<AFlagActor*>& TemporaryFlagList);
 };

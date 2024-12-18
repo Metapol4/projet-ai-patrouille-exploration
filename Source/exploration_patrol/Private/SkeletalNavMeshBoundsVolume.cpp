@@ -686,13 +686,14 @@ void ASkeletalNavMeshBoundsVolume::GenerateOneGuardPath()
 	TArray<AFlagActor*> TemporaryFlagList = FlagManager->GetFlagActors();
 
 	FilterAndSortOutAltAndBidirectional(TemporaryFlagList);
-
+	FilterAllAlreadyInUse(TemporaryFlagList);
+	
 	int ListLimit =
 		UKismetMathLibrary::FFloor(TemporaryFlagList.Num() * (PercentageRandomStartingPointSelection / 100.0f));
 	if (ListLimit > TemporaryFlagList.Num())
 		ListLimit = TemporaryFlagList.Num();
 
-	int RandomIndex = UKismetMathLibrary::RandomIntegerInRange(0, ListLimit);
+	int RandomIndex = UKismetMathLibrary::RandomIntegerInRange(0, ListLimit - 1);
 	int StartingFlag = TemporaryFlagList[RandomIndex]->SOFlag->Segment.id;
 
 	int EndingFlag = -1;
@@ -712,7 +713,11 @@ void ASkeletalNavMeshBoundsVolume::GenerateOneGuardPath()
 		return;
 
 	AStarPathReconstructor(EvaluatedGuardPath, StartingFlag, EndingFlag, ReconstructedChallengePath);
-	ChallengePath.Add(ReconstructedChallengePath);
+	if (!ReconstructedChallengePath.IsEmpty())
+	{
+		ChallengePath.Add(ReconstructedChallengePath);
+	}
+	DrawChallengePaths();
 }
 
 void ASkeletalNavMeshBoundsVolume::GenerateGuardPathsUntilFail()
@@ -721,6 +726,7 @@ void ASkeletalNavMeshBoundsVolume::GenerateGuardPathsUntilFail()
 	{
 		GenerateOneGuardPath();
 	}
+	
 	ClearDebugLine();
 	ChallengePath.Pop();
 	DrawChallengePaths();
@@ -764,8 +770,10 @@ bool ASkeletalNavMeshBoundsVolume::FindPlayerPath()
 
 	float Success = AStarPathReconstructor(EvaluatedGuardPath, GoldenStartingFlagId, GoldenEndingFlagId,
 	                                       ReconstructedChallengePath);
+
 	if (Success < 0)
 		return false;
+
 	PlayerPath.Empty();
 	PlayerPath = ReconstructedChallengePath;
 	DrawLatestPlayerPath();
@@ -779,10 +787,10 @@ void ASkeletalNavMeshBoundsVolume::DrawChallengePaths()
 		for (int ChallengePathID : CurrentChallenge)
 		{
 			AFlagActor* ChallengeFlag = FlagManager->GetFlagActor(ChallengePathID);
-			FColor MainColor = FColor::Red;
+			FColor MainColor = DGuardPathColor;
 			if (ChallengePathID == GoldenStartingFlagId)
 			{
-				MainColor = FColor::Blue;
+				MainColor = DGuardPathColor;
 			}
 			DrawDebugLine(
 				GetWorld(),
@@ -1100,6 +1108,20 @@ void ASkeletalNavMeshBoundsVolume::FilterAndSortOutAltAndBidirectional(TArray<AF
 	});
 }
 
+void ASkeletalNavMeshBoundsVolume::FilterAllAlreadyInUse(TArray<AFlagActor*>& TemporaryFlagList)
+{
+	for (TArray<int> GuardPath : ChallengePath)
+	{
+		for (auto FlagID : GuardPath)
+		{
+			AFlagActor* Flag = FlagManager->GetFlagActor(FlagID);
+			if(TemporaryFlagList.Contains(Flag))
+			{
+				TemporaryFlagList.Remove(Flag);
+			}
+		}
+	}
+}
 //GEOMETRY FUNCTION
 bool ASkeletalNavMeshBoundsVolume::NavPoly_GetAllPolys(TArray<NavNodeRef>& Polys)
 {
@@ -1312,6 +1334,7 @@ void ASkeletalNavMeshBoundsVolume::DebugDirectionality(int FlagID)
 	}
 }
 
+
 //GARD PATH FUNCTION
 /*
 	 * This function search recursively among all node from a starting point until 2 conditions
@@ -1436,13 +1459,16 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 	//Test each neighbors in priority order
 	for (int i = 0; i < SourceNeighbors.Num(); i++)
 	{
+		
 		// Get Neighbors Actor
 		int NeighborsId = SourceNeighbors[i].ID;
 		AFlagActor* Neighbour = FlagManager->GetFlagActor(NeighborsId);
 		int NeighborWeight = Neighbour->SOFlag->Segment.Lenght;
 
 		//GO TO NEXT NEIGHBORS ....
-
+		
+		UE_LOG(LogTemp, Warning, TEXT("%d."), NeighborsId)
+		
 		//	... if Neighbors already in path
 		if (Path[NeighborsId] != -1)
 			continue;
@@ -1461,11 +1487,28 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 		if (VisibilityFilter)
 			continue;
 
+		// ... if neighbors is used by another guard
+		bool OtherGuardFilter = false;
+		for (TArray<int> GuardPath : ChallengePath)
+		{
+			if (GuardPath.Contains(NeighborsId))
+			{
+				OtherGuardFilter = true;
+				break;
+			}
+		}
+		if (OtherGuardFilter)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("CONTINUE : OTHER GUARD AT : %d"), NeighborsId)
+			continue;
+		}
+		
 		// PATH COMPLETED ...
 		
 		//	... if K lenght reached with next neighbors
 		if (NeighborWeight >= KLenght)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("RETURN : DESIRED LENGHT REACHED"))
 			End = NeighborsId;
 			Path[NeighborsId] = Source;
 			return true;
@@ -1473,6 +1516,7 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 		// ... if max iteration has been reached
 		if (KLenghtIterations > MaxKLenghtIterationsMod * KLengthTarget)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("RETURN : MAX ITERATION"))
 			End = NeighborsId;
 			Path[NeighborsId] = Source;
 			return true;
