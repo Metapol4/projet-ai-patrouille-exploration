@@ -1433,8 +1433,7 @@ bool ASkeletalNavMeshBoundsVolume::PathMoreThanKUtil(int Source, int KLenght, TA
 bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int KLenght, FVector2d VERT,
                                                                TArray<int>& Path, int& End)
 {
-
-	// SECURITY :  limit recursivity
+	// SECURITY :  Limit recursivity
 	KLenghtIterations++;
 	
 	TArray<FNeighbors> SourceNeighbors;
@@ -1467,8 +1466,6 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 
 		//GO TO NEXT NEIGHBORS ....
 		
-		UE_LOG(LogTemp, Warning, TEXT("%d."), NeighborsId)
-		
 		//	... if Neighbors already in path
 		if (Path[NeighborsId] != -1)
 			continue;
@@ -1499,7 +1496,6 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 		}
 		if (OtherGuardFilter)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("CONTINUE : OTHER GUARD AT : %d"), NeighborsId)
 			continue;
 		}
 		
@@ -1524,10 +1520,8 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 
 		// RECURSION 
 		Path[NeighborsId] = Source;
-
 		if (GuardPathMoreThanKGenerator(NeighborsId, KLenght - NeighborWeight, VERT, Path, End))
 			return true;
-
 		Path[NeighborsId] = -1;
 	}
 	return false;
