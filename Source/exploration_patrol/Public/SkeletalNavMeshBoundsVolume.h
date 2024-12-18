@@ -105,11 +105,13 @@ public:
 	void GenerateOneGuardPath();
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
 	void FindPlayerPath();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	void DrawChallengePaths();
 	
 	UFUNCTION()
 	void CalculateGuardPathVisionTimeSteps();
 	UFUNCTION()
-	void CalculateNeighboursForTimeStep(AFlagActor* SelfFlag, FVector Direction, int Step);
+	void CalculateNeighboursForTimeStep(AFlagActor* SelfFlag, FVector Direction, int Step, int GuardPathId);
 	UFUNCTION(/*CallInEditor,*/ BlueprintCallable, Category="06ControlPanelChallenge")
 	void CreateChallenges();
 	UFUNCTION(/*CallInEditor, */BlueprintCallable, Category="06ControlPanelChallenge")
@@ -157,7 +159,7 @@ public:
 
 	bool GuardPathMoreThanKGenerator(int Source, int KLenght, FVector2d VERT, TArray<int>& Path, int& End);
 
-	bool PlayerPathMoreThanKUntilGoal(int Source, int KLenght, TArray<int>& Path, int& Goal);
+	bool PlayerPathMoreThanKUntilGoal(int Source, int Step, TArray<int>& Path, int& Goal);
 
 	UFUNCTION(BlueprintCallable, Category="06ControlPanelChallenge")
 	void LegacySelectChallengeSegments();

@@ -79,3 +79,19 @@ TArray<int> USO_Flag::GetCombinedNeighbours()
 	Neighbours.Append(EndPointIds);
 	return Neighbours;
 }
+
+void USO_Flag::AddTimeStep(int GuardPathId, int Step)
+{
+	for (int i = 0; i < Segment.StepGroups.Num(); i++)
+	{
+		if (Segment.StepGroups[i].GuardPathId == GuardPathId)
+		{
+			Segment.StepGroups[i].SeenAtTimeSteps.AddUnique(Step);
+			return;
+		}
+	}
+	FTimeStep NewStepGroup;
+	NewStepGroup.GuardPathId = GuardPathId;
+	NewStepGroup.SeenAtTimeSteps.Add(Step);
+	Segment.StepGroups.Add(NewStepGroup);
+}

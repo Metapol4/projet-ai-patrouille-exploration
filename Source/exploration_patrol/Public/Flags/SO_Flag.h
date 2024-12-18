@@ -9,6 +9,16 @@
 #include "SO_Flag.generated.h"
 
 USTRUCT(BlueprintType)
+struct FTimeStep
+{
+	GENERATED_BODY()
+	UPROPERTY(EditAnywhere)
+	int GuardPathId;
+	UPROPERTY(EditAnywhere)
+	TArray<int> SeenAtTimeSteps;
+};
+
+USTRUCT(BlueprintType)
 struct FFlagSegment
 {
 	GENERATED_BODY()
@@ -21,7 +31,7 @@ struct FFlagSegment
 	UPROPERTY(EditAnywhere)
 	float Lenght;
 	UPROPERTY(EditAnywhere)
-    float Area;
+	float Area;
 	UPROPERTY(EditAnywhere)
 	float VisionArea;
 	UPROPERTY(EditAnywhere)
@@ -29,12 +39,11 @@ struct FFlagSegment
 	UPROPERTY(EditAnywhere)
 	TArray<int> VisibilityGroups;
 	UPROPERTY(EditAnywhere)
-	TArray<int> SeenAtTimeSteps;
+	TArray<FTimeStep> StepGroups;
 	UPROPERTY(EditAnywhere)
 	EFlagType FlagType = EFlagType::NONE;
 	UPROPERTY(EditAnywhere)
 	EFlagPathType PathType = EFlagPathType::NONE;
-
 };
 
 UCLASS()
@@ -42,6 +51,7 @@ class EXPLORATION_PATROL_API USO_Flag : public USmartObjectComponent
 {
 	GENERATED_BODY()
 	USO_Flag();
+
 public:
 	/*UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	USplineComponent* Spline;*/
@@ -54,6 +64,10 @@ public:
 	int IsTouchingFlagType(EFlagType FlagType, bool MustBeGolden = false);
 	UFUNCTION()
 	int IsTouchingPathType(EFlagPathType PathType);
+	UFUNCTION()
+	TArray<int> GetCombinedNeighbours();
+	UFUNCTION()
+	void AddTimeStep(int GuardPathId, int Step);
 	UPROPERTY()
 	TArray<USO_Flag*> BeginPointConnections;
 	UPROPERTY()
@@ -62,8 +76,6 @@ public:
 	TArray<int> BeginPointIds;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<int> EndPointIds;
-	UFUNCTION()
-	TArray<int> GetCombinedNeighbours();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FFlagSegment Segment;
 	
