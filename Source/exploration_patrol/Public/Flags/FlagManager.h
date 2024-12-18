@@ -67,6 +67,8 @@ public:
 	UFUNCTION()
 	void ShowVisionGroupForActor(FDebugVisionGroup DebugInfo, bool DrawBlackLines = true);
 	UFUNCTION()
+	void ResetAllDebugTexts();
+	UFUNCTION()
 	void ShowVisionGroupForActors(TArray<FDebugVisionGroup> DebugInfo);
 	UFUNCTION()
 	void AddToShowVisionGroupActor(FDebugVisionGroup DebugInfo);
