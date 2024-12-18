@@ -1300,7 +1300,7 @@ void ASkeletalNavMeshBoundsVolume::a04FindSafeSegments()
 
 void ASkeletalNavMeshBoundsVolume::a05CalculateDirectionality()
 {
-	CalculateDirectionnality(DebugFlagTypeDirection);
+	CalculateDirectionnality(EFlagType::SAFE);
 }
 
 void ASkeletalNavMeshBoundsVolume::a06GenerateGuardPaths()
