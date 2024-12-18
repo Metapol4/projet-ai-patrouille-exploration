@@ -202,6 +202,7 @@ private:
 	TArray<int> FlagCurrentlySeen;
 	void AddAngleToSortValue(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source);
 	void AddExplorationBonusToSortValue(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source, TArray<int>& CameFrom);
+	void AddExitBonusToSortValue(TArray<FNeighbors>& OutSourceNeighbors);
 	void DebugDirectionality(int FlagID);
 	
 	void FilterAllAlreadyInUse(TArray<AFlagActor*>& TemporaryFlagList);
