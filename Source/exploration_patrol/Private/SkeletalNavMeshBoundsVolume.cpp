@@ -704,16 +704,47 @@ void ASkeletalNavMeshBoundsVolume::GenerateOneGuardPath()
 	FlagCurrentlySeen.Init(-1, FlagManager->GetFlagActorSize());
 
 	TArray<int> ReconstructedChallengePath;
-	
-	if(!GuardPathMoreThanKGenerator(StartingFlag, KLengthTarget, FVector2d(1, 1), EvaluatedGuardPath, EndingFlag))
+
+	if (!GuardPathMoreThanKGenerator(StartingFlag, KLengthTarget, FVector2d(1, 1), EvaluatedGuardPath, EndingFlag))
 		return;
-	
+
+	if (EndingFlag < 0)
+		return;
+
 	AStarPathReconstructor(EvaluatedGuardPath, StartingFlag, EndingFlag, ReconstructedChallengePath);
 	ChallengePath.Add(ReconstructedChallengePath);
-	DrawChallengePaths();
 }
 
-void ASkeletalNavMeshBoundsVolume::FindPlayerPath()
+void ASkeletalNavMeshBoundsVolume::GenerateGuardPathsUntilFail()
+{
+	while (FindPlayerPath())
+	{
+		GenerateOneGuardPath();
+	}
+	ClearDebugLine();
+	ChallengePath.Pop();
+	DrawChallengePaths();
+	DrawLatestPlayerPath();
+	/*for (int i = 0; i < 5; i++)
+	{
+		GenerateOneGuardPath();
+		bool Success = FindPlayerPath();
+		if (!Success)
+		{
+			if (!ChallengePath.IsEmpty())
+			{
+				UE_LOG(LogTemp, Warning, TEXT("pop"));
+				ChallengePath.Pop();
+			}
+		}
+		else
+		{
+			i = 0;
+		}
+	}*/
+}
+
+bool ASkeletalNavMeshBoundsVolume::FindPlayerPath()
 {
 	//ClearDebugLine();
 
@@ -731,30 +762,18 @@ void ASkeletalNavMeshBoundsVolume::FindPlayerPath()
 	PlayerPathMoreThanKUntilGoal(GoldenStartingFlagId, 0, EvaluatedGuardPath,
 	                             GoldenEndingFlagId);
 
-	AStarPathReconstructor(EvaluatedGuardPath, GoldenStartingFlagId, GoldenEndingFlagId, ReconstructedChallengePath);
-	for (int ChallengePathID : ReconstructedChallengePath)
-	{
-		AFlagActor* ChallengeFlag = FlagManager->GetFlagActor(ChallengePathID);
-		FColor MainColor = FColor::Yellow;
-		if (ChallengePathID == GoldenStartingFlagId)
-		{
-			MainColor = FColor::Purple;
-		}
-		DrawDebugDirectionalArrow(
-			GetWorld(),
-			ChallengeFlag->SOFlag->Segment.BeginPosition,
-			ChallengeFlag->SOFlag->Segment.EndPosition,
-			500,
-			MainColor,
-			true,
-			300
-		);
-	}
+	float Success = AStarPathReconstructor(EvaluatedGuardPath, GoldenStartingFlagId, GoldenEndingFlagId,
+	                                       ReconstructedChallengePath);
+	if (Success < 0)
+		return false;
+	PlayerPath.Empty();
+	PlayerPath = ReconstructedChallengePath;
+	DrawLatestPlayerPath();
+	return true;
 }
 
 void ASkeletalNavMeshBoundsVolume::DrawChallengePaths()
 {
-	ClearDebugLine();
 	for (TArray<int> CurrentChallenge : ChallengePath)
 	{
 		for (int ChallengePathID : CurrentChallenge)
@@ -774,6 +793,29 @@ void ASkeletalNavMeshBoundsVolume::DrawChallengePaths()
 				300
 			);
 		}
+	}
+}
+
+void ASkeletalNavMeshBoundsVolume::DrawLatestPlayerPath()
+{
+	if (PlayerPath.IsEmpty())
+		return;
+	for (int FlagId : PlayerPath)
+	{
+		AFlagActor* ChallengeFlag = FlagManager->GetFlagActor(FlagId);
+		FColor MainColor = FColor::Yellow;
+		if (FlagId == GoldenStartingFlagId)
+		{
+			MainColor = FColor::Purple;
+		}
+		DrawDebugLine(
+			GetWorld(),
+			ChallengeFlag->SOFlag->Segment.BeginPosition,
+			ChallengeFlag->SOFlag->Segment.EndPosition,
+			MainColor,
+			true,
+			300
+		);
 	}
 }
 
@@ -1180,7 +1222,7 @@ float ASkeletalNavMeshBoundsVolume::AStarPathReconstructor(TArray<int> CameFrom,
 		if (GoalID < 0)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("CHLG : FAIL AT %d"), GoalID);
-			return TotalPathLenght;
+			return -1;
 		}
 		//UE_LOG(LogTemp, Warning, TEXT("%d"), GoalID);
 		ReconstructedPath.Add(GoalID);
@@ -1418,7 +1460,7 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 		}
 		if (VisibilityFilter)
 			continue;
-		
+
 		// PATH COMPLETED ...
 		
 		//	... if K lenght reached with next neighbors
@@ -1452,10 +1494,7 @@ bool ASkeletalNavMeshBoundsVolume::PlayerPathMoreThanKUntilGoal(int Source, int 
 	/*security, prevent infinite stack*/
 	KLenghtIterations++;
 	if (KLenghtIterations > 500000)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PLYRPTH: buffer overflow"))
 		return true;
-	}
 
 	TArray<int> SourceNeighbors;
 	AFlagActor* SourceFlag = FlagManager->GetFlagActor(Source);
@@ -1487,6 +1526,19 @@ bool ASkeletalNavMeshBoundsVolume::PlayerPathMoreThanKUntilGoal(int Source, int 
 	if (!HasPassedThroughEnd)
 		SourceNeighbors.Append(SourceFlag->SOFlag->EndPointIds);
 
+	/*if (SourceNeighbors.Num() > 0)
+	{
+		int32 LastIndex = SourceNeighbors.Num() - 1;
+		for (int32 i = 0; i <= LastIndex; ++i)
+		{
+			int32 Index = FMath::RandRange(i, LastIndex);
+			if (i != Index)
+			{
+				SourceNeighbors.Swap(i, Index);
+			}
+		}
+	}*/
+
 	for (int i = 0; i < SourceNeighbors.Num(); i++)
 	{
 		int NeighborsId = SourceNeighbors[i];
@@ -1500,17 +1552,19 @@ bool ASkeletalNavMeshBoundsVolume::PlayerPathMoreThanKUntilGoal(int Source, int 
 		{
 			for (FTimeStep StepGroup : Neighbour->SOFlag->Segment.StepGroups)
 			{
-				int StepSize = ChallengePath[StepGroup.GuardPathId].Num() * 2;
-				int LocalStep = Step % StepSize;
-				VisibilityFilter = StepGroup.SeenAtTimeSteps.Contains(LocalStep);
+				if (!ChallengePath.IsEmpty())
+				{
+					if (!ChallengePath[StepGroup.GuardPathId].IsEmpty())
+					{
+						int StepSize = ChallengePath[StepGroup.GuardPathId].Num() * 2;
+						int LocalStep = Step % StepSize;
+						VisibilityFilter = StepGroup.SeenAtTimeSteps.Contains(LocalStep);
+					}
+				}
 			}
 		}
 		if (VisibilityFilter)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("PLYRPTH: Blocked at Step: %d, By flag id : %d"), Step,
-			       Neighbour->SOFlag->Segment.id);
 			continue;
-		}
 
 		// Goal reached, unfold all recursively
 		if (NeighborsId == Goal)
@@ -1526,8 +1580,6 @@ bool ASkeletalNavMeshBoundsVolume::PlayerPathMoreThanKUntilGoal(int Source, int 
 
 		Path[NeighborsId] = -1;
 	}
-	UE_LOG(LogTemp, Warning, TEXT("PLYRPTH: nowhere to go"))
-
 	return false;
 }
 
@@ -1640,7 +1692,7 @@ void ASkeletalNavMeshBoundsVolume::AddAngleToSortValue(TArray<FNeighbors>& OutSo
 	{
 		return;
 	}
-	
+
 	//Source Direction
 	FVector SourceDirection;
 	if (Source->SOFlag->EndPointIds.Contains(OutSourceNeighbors[0].ID))

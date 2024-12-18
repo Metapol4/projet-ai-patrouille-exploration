@@ -104,10 +104,13 @@ public:
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
 	void GenerateOneGuardPath();
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
-	void FindPlayerPath();
+	void GenerateGuardPathsUntilFail();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	bool FindPlayerPath();
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
 	void DrawChallengePaths();
-	
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	void DrawLatestPlayerPath();
 	UFUNCTION()
 	void CalculateGuardPathVisionTimeSteps();
 	UFUNCTION()
@@ -154,6 +157,7 @@ public:
 
 	TArray<TArray<int>> ChallengeGroups;
 	TArray<TArray<int>> ChallengePath;
+	TArray<int> PlayerPath;
 
 	bool PathMoreThanKUtil(int Source, int KLenght, TArray<int>& Path, int& Goal);
 
