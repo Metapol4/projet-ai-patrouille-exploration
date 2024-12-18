@@ -62,6 +62,9 @@ public:
 	AFlagManager* FlagManager;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Debugs")
 	bool FlushDebugLinesWhenGeneratingNewOnes = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Debugs")
+	float SimulationTimeStep = 0.75f;
+
 
 	/* Utils */
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="00Debugs")
@@ -221,5 +224,4 @@ private:
 
 	FTimerHandle SimulationTimer;
 	FTimerDelegate SimulationDelegate;
-	float SimulationTimeStep = 2.0f;
 };
