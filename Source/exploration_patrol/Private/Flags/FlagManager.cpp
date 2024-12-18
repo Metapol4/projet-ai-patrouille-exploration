@@ -250,10 +250,10 @@ void AFlagManager::NewCalculateIndividualVisionGroups()
 
 			FCollisionQueryParams QueryParams;
 			QueryParams.AddIgnoredActor(FlagActors[i]);
-			
+
 			if (UE::Geometry::Distance(TraceStart, TraceEnd) > GuardVisionRange)
 				continue;
-			
+
 			bool HasHitSomething = GetWorld()->LineTraceSingleByChannel(
 				Hit, TraceStart, TraceEnd, TraceChannelProperty,
 				QueryParams);
@@ -272,7 +272,10 @@ void AFlagManager::NewCalculateIndividualVisionGroups()
 void AFlagManager::ShowVisionGroupForActor(FDebugVisionGroup DebugInfo, bool DrawBlackLines)
 {
 	if (DrawBlackLines)
+	{
+		ResetAllDebugTexts();
 		FlushPersistentDebugLines(GetWorld());
+	}
 	AFlagActor* flag = FlagActors[DebugInfo.id];
 	DrawDebugSphere(
 		GetWorld(),
@@ -317,6 +320,14 @@ void AFlagManager::ShowVisionGroupForActor(FDebugVisionGroup DebugInfo, bool Dra
 	}
 	if (ShowVisionGroupDebugText)
 		flag->SetVisionGroupText();
+}
+
+void AFlagManager::ResetAllDebugTexts()
+{
+	for (AFlagActor* Element : FlagActors)
+	{
+		Element->ResetText();
+	}
 }
 
 void AFlagManager::ShowVisionGroupForActors(TArray<FDebugVisionGroup> DebugInfo)
