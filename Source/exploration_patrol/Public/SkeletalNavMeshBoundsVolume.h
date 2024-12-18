@@ -104,7 +104,9 @@ public:
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
 	void GenerateOneGuardPath();
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
-	void FindPlayerPath();
+	void GenerateGuardPathsUntilFail();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	bool FindPlayerPath();
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
 	void DrawChallengePaths();
 	
