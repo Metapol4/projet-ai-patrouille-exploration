@@ -107,7 +107,6 @@ void USO_Flag::RemoveTimeStepGroup(int GuardPathId)
 			break;
 		}
 	}
-	UE_LOG(LogTemp, Warning, TEXT("TIMSTP: removing at %d, FLAG: %d"), IndexToRemove, Segment.id);
 	if (IndexToRemove >= 0)
 	{
 		Segment.StepGroups.RemoveAt(IndexToRemove);
