@@ -721,37 +721,8 @@ void ASkeletalNavMeshBoundsVolume::GenerateOneGuardPath()
 }
 
 void ASkeletalNavMeshBoundsVolume::GenerateGuardPathsUntilFail()
-{/*
-	bool Satisfied = false;
-	int Iterations = 0;
-	while (!Satisfied)
-	{
-		EmptyChallengePath();
-		for (int i = 0; i < 4; i++)
-		{
-			GenerateOneGuardPath();
-		}
-		Satisfied = FindPlayerPath();
-		Iterations++;
-		if(Iterations >= 1000)
-			Satisfied = true;
-	}
-	ClearDebugLine();
-	DrawLatestPlayerPath();
-	DrawChallengePaths();
-	UE_LOG(LogTemp, Warning, TEXT("Gnrt: %d"), ChallengePath.Num());*/
-	/*while (FindPlayerPath())
-	{
-		GenerateOneGuardPath();
-	}
-	
-	ClearDebugLine();
-	if (!ChallengePath.IsEmpty())
-		ChallengePath.Pop();
-	DrawChallengePaths();
-	DrawLatestPlayerPath();*/
-	
-	//TArray<int> LatestPopped;
+{
+	EmptyChallengePath();
 	int Iterations = 0;
 	for (int i = 0; i < 10; i++)
 	{
@@ -762,34 +733,21 @@ void ASkeletalNavMeshBoundsVolume::GenerateGuardPathsUntilFail()
 			if (!ChallengePath.IsEmpty())
 			{
 				UE_LOG(LogTemp, Warning, TEXT("pop"));
-				/*LatestPopped = */ PopChallengePath();				
+				PopChallengePath();				
 			}
 		}
 		else
-		{
 			i = 0;
-		}
+		
 		Iterations++;
 		if(Iterations >= 1000)
+			break;
+		if(ChallengePath.Num() >= MaxGuardNb && MaxGuardNb != 0)
 			break;
 	}
 	ClearDebugLine();
 	DrawLatestPlayerPath();
 	DrawChallengePaths();
-
-		/*for (int ChallengePathID : LatestPopped)
-		{
-			AFlagActor* ChallengeFlag = FlagManager->GetFlagActor(ChallengePathID);
-			FColor MainColor = FColor::Magenta;
-			DrawDebugLine(
-				GetWorld(),
-				ChallengeFlag->SOFlag->Segment.BeginPosition,
-				ChallengeFlag->SOFlag->Segment.EndPosition,
-				MainColor,
-				true,
-				300
-			);
-		}*/
 }
 
 void ASkeletalNavMeshBoundsVolume::FindPlayerPathEditor()

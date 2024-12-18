@@ -156,7 +156,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
 	int KLengthTarget = 2500;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
-	int MinimalGuardPathLength = 1000;
+	int MaxGuardNb = 10;
 	UPROPERTY()
 	int KLenghtIterations;
 	UPROPERTY()
