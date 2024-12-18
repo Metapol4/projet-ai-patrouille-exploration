@@ -3,7 +3,6 @@
 #include "CookOnTheFly.h"
 #include "DataTypeUtils.h"
 #include "VectorTypes.h"
-#include "Kismet/KismetArrayLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 
 void ASkeletalNavMeshBoundsVolume::GenerateAll()
@@ -705,18 +704,28 @@ void ASkeletalNavMeshBoundsVolume::GenerateOneGuardPath()
 	FlagCurrentlySeen.Init(-1, FlagManager->GetFlagActorSize());
 
 	TArray<int> ReconstructedChallengePath;
-	
-	if(!GuardPathMoreThanKGenerator(StartingFlag, KLengthTarget, FVector2d(1, 1), EvaluatedGuardPath, EndingFlag))
+
+	if (!GuardPathMoreThanKGenerator(StartingFlag, KLengthTarget, FVector2d(1, 1), EvaluatedGuardPath, EndingFlag))
 		return;
-	
+
+	if (EndingFlag < 0)
+		return;
+
 	AStarPathReconstructor(EvaluatedGuardPath, StartingFlag, EndingFlag, ReconstructedChallengePath);
 	ChallengePath.Add(ReconstructedChallengePath);
-	DrawChallengePaths();
 }
 
 void ASkeletalNavMeshBoundsVolume::GenerateGuardPathsUntilFail()
 {
-	for (int i = 0; i < 5; i++)
+	while (FindPlayerPath())
+	{
+		GenerateOneGuardPath();
+	}
+	ClearDebugLine();
+	ChallengePath.Pop();
+	DrawChallengePaths();
+	DrawLatestPlayerPath();
+	/*for (int i = 0; i < 5; i++)
 	{
 		GenerateOneGuardPath();
 		bool Success = FindPlayerPath();
@@ -732,8 +741,7 @@ void ASkeletalNavMeshBoundsVolume::GenerateGuardPathsUntilFail()
 		{
 			i = 0;
 		}
-	}
-	DrawChallengePaths();
+	}*/
 }
 
 bool ASkeletalNavMeshBoundsVolume::FindPlayerPath()
@@ -758,31 +766,14 @@ bool ASkeletalNavMeshBoundsVolume::FindPlayerPath()
 	                                       ReconstructedChallengePath);
 	if (Success < 0)
 		return false;
-
-	for (int ChallengePathID : ReconstructedChallengePath)
-	{
-		AFlagActor* ChallengeFlag = FlagManager->GetFlagActor(ChallengePathID);
-		FColor MainColor = FColor::Yellow;
-		if (ChallengePathID == GoldenStartingFlagId)
-		{
-			MainColor = FColor::Purple;
-		}
-		DrawDebugDirectionalArrow(
-			GetWorld(),
-			ChallengeFlag->SOFlag->Segment.BeginPosition,
-			ChallengeFlag->SOFlag->Segment.EndPosition,
-			500,
-			MainColor,
-			true,
-			300
-		);
-	}
+	PlayerPath.Empty();
+	PlayerPath = ReconstructedChallengePath;
+	DrawLatestPlayerPath();
 	return true;
 }
 
 void ASkeletalNavMeshBoundsVolume::DrawChallengePaths()
 {
-	ClearDebugLine();
 	for (TArray<int> CurrentChallenge : ChallengePath)
 	{
 		for (int ChallengePathID : CurrentChallenge)
@@ -802,6 +793,29 @@ void ASkeletalNavMeshBoundsVolume::DrawChallengePaths()
 				300
 			);
 		}
+	}
+}
+
+void ASkeletalNavMeshBoundsVolume::DrawLatestPlayerPath()
+{
+	if (PlayerPath.IsEmpty())
+		return;
+	for (int FlagId : PlayerPath)
+	{
+		AFlagActor* ChallengeFlag = FlagManager->GetFlagActor(FlagId);
+		FColor MainColor = FColor::Yellow;
+		if (FlagId == GoldenStartingFlagId)
+		{
+			MainColor = FColor::Purple;
+		}
+		DrawDebugLine(
+			GetWorld(),
+			ChallengeFlag->SOFlag->Segment.BeginPosition,
+			ChallengeFlag->SOFlag->Segment.EndPosition,
+			MainColor,
+			true,
+			300
+		);
 	}
 }
 
@@ -1435,7 +1449,7 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 		//Ignore if Neighbors already been use in this path
 		if (Path[NeighborsId] != -1)
 			continue;
-		
+
 		bool VisibilityFilter = false;
 		for (int j = 0; j < Neighbour->SOFlag->Segment.VisibilityGroups.Num(); j++)
 		{
@@ -1449,7 +1463,7 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 
 		if (VisibilityFilter)
 			continue;
-		
+
 
 		//Length test with this Neighbors
 		if (NeighborWeight >= KLenght)
@@ -1672,7 +1686,7 @@ void ASkeletalNavMeshBoundsVolume::AddAngleToSortValue(TArray<FNeighbors>& OutSo
 	{
 		return;
 	}
-	
+
 	//Source Direction
 	FVector SourceDirection;
 	if (Source->SOFlag->EndPointIds.Contains(OutSourceNeighbors[0].ID))
