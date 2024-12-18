@@ -7,9 +7,9 @@
 
 void ASkeletalNavMeshBoundsVolume::GenerateAll()
 {
+	ComputeGeometry();
 	SendFlagBatch();
 	CalculateVisionGroups();
-	//Find Safe Segment
 	FindSafeSegments();
 	CalculateDirectionnality(EFlagType::SAFE);
 	//CreateChallenges();
@@ -24,13 +24,13 @@ void ASkeletalNavMeshBoundsVolume::GenerateAll()
 void ASkeletalNavMeshBoundsVolume::BeginPlay()
 {
 	Super::BeginPlay();
-	ComputeGeometry();
 }
 
 //CONSOLE FUNCTION
 void ASkeletalNavMeshBoundsVolume::ClearDebugLine()
 {
 	FlushPersistentDebugLines(GetWorld());
+	FlagManager->ResetAllDebugTexts();
 }
 
 void ASkeletalNavMeshBoundsVolume::ComputeGeometry()
@@ -436,7 +436,7 @@ void ASkeletalNavMeshBoundsVolume::FindBeginAndEndFlags()
 	}
 }
 
-void ASkeletalNavMeshBoundsVolume::CalculateDebugDirectionnality()
+void ASkeletalNavMeshBoundsVolume::CalculateDirectionnalityButton()
 {
 	CalculateDirectionnality(DebugFlagTypeDirection);
 }
@@ -1244,6 +1244,39 @@ void ASkeletalNavMeshBoundsVolume::FilterAllAlreadyInUse(TArray<AFlagActor*>& Te
 		}
 	}
 }
+
+void ASkeletalNavMeshBoundsVolume::a01ComputeGeometry()
+{
+	ComputeGeometry();
+}
+
+void ASkeletalNavMeshBoundsVolume::a02SendFlagBatch()
+{
+	SendFlagBatch();
+}
+
+void ASkeletalNavMeshBoundsVolume::a03CalculateVisionGroups()
+{
+	CalculateVisionGroups();
+	int FlagSelection = UKismetMathLibrary::RandomIntegerInRange(0, FlagManager->GetFlagActorSize());
+	FlagManager->GetFlagActor(FlagSelection)->SeeVisionGroup();
+}
+
+void ASkeletalNavMeshBoundsVolume::a04FindSafeSegments()
+{
+	FindSafeSegments();
+}
+
+void ASkeletalNavMeshBoundsVolume::a05CalculateDirectionality()
+{
+	CalculateDirectionnality(DebugFlagTypeDirection);
+}
+
+void ASkeletalNavMeshBoundsVolume::a06GenerateGuardPaths()
+{
+	GenerateGuardPathsUntilFail();
+}
+
 //GEOMETRY FUNCTION
 bool ASkeletalNavMeshBoundsVolume::NavPoly_GetAllPolys(TArray<NavNodeRef>& Polys)
 {

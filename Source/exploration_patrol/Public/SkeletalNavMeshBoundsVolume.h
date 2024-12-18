@@ -27,7 +27,24 @@ class EXPLORATION_PATROL_API ASkeletalNavMeshBoundsVolume : public ANavMeshBound
 	GENERATED_BODY()
 
 public:
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	void a01ComputeGeometry();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	void a02SendFlagBatch();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	void a03CalculateVisionGroups();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	void a04FindSafeSegments();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	void a05CalculateDirectionality();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	void a06GenerateGuardPaths();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	void GenerateAll();
+
 	/* Poly */
+	UFUNCTION()
+	void ComputeGeometry();
 	TArray<NavNodeRef> PolyArray;
 	bool NavPoly_GetAllPolys(TArray<NavNodeRef>& Polys);
 	bool TileIsValid(const ARecastNavMesh* Navmesh, int32 TileIndex) const;
@@ -43,43 +60,33 @@ public:
 	bool DDirectionality;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Debugs")
 	AFlagManager* FlagManager;
-
-	/* Utils */
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanelUtils")
-	void ClearDebugLine();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanelUtils")
-	void ComputeGeometry();
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="01ControlPanelUtils")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Debugs")
 	bool FlushDebugLinesWhenGeneratingNewOnes = true;
 
+	/* Utils */
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="00Debugs")
+	void ClearDebugLine();
+	
+
 	/* Flags */
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="02ControlPanelFlags")
+	UFUNCTION()
 	void SendFlagBatch();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="02ControlPanelFlags")
+	UFUNCTION(Category="02ControlPanelFlags")
 	void ResetAllFlagTypes();
 
 	TArray<FFlagSegment> FlagSegments;
 
 	/* Vision */
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="03ControlPanelVision")
+	UFUNCTION()
 	void CalculateVisionGroups();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="03ControlPanelVision")
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="03Vision")
 	void HighlightVisionGroupsFromList();
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="03ControlPanelVision")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="03Vision")
 	TArray<FDebugVisionGroup> DSVisionPathsToHighlight;
 
-	/* Golden Path */
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="04ControlPanelGolden")
+	/* Legacy Golden Path */
 	void FindGoldenPath();
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="04ControlPanelGolden")
 	float MinimumPathLenght = 6000;
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="04ControlPanelGolden")
-	void FindSafeSegments();
-	UFUNCTION()
-	void FindBeginAndEndFlags();
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="04ControlPanelGolden")
-	float PercentageSafeSegment = 5.0f;
-
 	TArray<int> GoldenPath;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int GoldenStartingFlagId;
@@ -87,36 +94,45 @@ public:
 	int GoldenEndingFlagId;
 	TArray<int> GoldenPathCopy;
 
+
+	/* Safe */
+	UFUNCTION()
+	void FindSafeSegments();
+	void FindBeginAndEndFlags();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="04Safe")
+	float PercentageSafeSegment = 5.0f;
+
+
 	/* Directionality */
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="05ControlPanelDirectionality")
-	void CalculateDebugDirectionnality();
+	void CalculateDirectionnalityButton();
 
 	void CalculateDirectionnality(EFlagType FlagType);
 
 	EFlagDirection GetAdditiveFlagDirection(EFlagDirection WantedDirection, EFlagDirection CurrentDirection);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="05ControlPanelDirectionality")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="05Directionality")
 	float AngleTolerance = 45;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="05ControlPanelDirectionality")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="05Directionality")
 	EFlagType DebugFlagTypeDirection = EFlagType::SAFE;
 
-	/* Challenge */
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	/* Guards */
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="06Guards")
 	void GenerateOneGuardPath();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	UFUNCTION()
 	void GenerateGuardPathsUntilFail();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="06Guards")
 	void SimulateCurrentConfiguration();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="06Guards")
 	void FindPlayerPathEditor();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	UFUNCTION(Category="06Guards")
 	bool FindPlayerPath();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="06Guards")
 	void DrawChallengePaths();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="06ControlPanelChallenge")
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="06Guards")
 	void DrawLatestPlayerPath();
 	UFUNCTION()
 	void CalculateGuardPathVisionTimeSteps();
+	bool GuardPathMoreThanKGenerator(int Source, int KLenght, FVector2d VERT, TArray<int>& Path, int& End);
 	UFUNCTION()
 	TArray<int> PopChallengePath();
 	UFUNCTION()
@@ -125,41 +141,17 @@ public:
 	void DrawNextStep(int MaxStep);
 	UFUNCTION()
 	void CalculateNeighboursForTimeStep(AFlagActor* SelfFlag, FVector Direction, int Step, int GuardPathId);
-	UFUNCTION(/*CallInEditor,*/ BlueprintCallable, Category="06ControlPanelChallenge")
-	void CreateChallenges();
-	UFUNCTION(/*CallInEditor, */BlueprintCallable, Category="06ControlPanelChallenge")
-	void LegacyCreateChallengeGroups();
-	UFUNCTION(/*CallInEditor, */BlueprintCallable, Category="06ControlPanelChallenge")
-	void LegacySelectAllChallengeSegments();
-	UFUNCTION(/*CallInEditor,*/ BlueprintCallable, Category="06ControlPanelChallenge")
-	void PrintChallengeGroups();
-	UPROPERTY(/*EditAnywhere,*/ BlueprintReadWrite, Category="06ControlPanelChallenge")
-	int PercentChanceOfMergingChallengeGroup = 50;
-	UFUNCTION(/*CallInEditor,*/ BlueprintCallable, Category="06ControlPanelChallenge")
-	void ConstructChallengePaths();
-
-	UFUNCTION()
-	bool AreSameChallengeGroup(int FlagA, int FlagB);
-	UFUNCTION()
-	void FilterAndSortOutAltAndBidirectional(TArray<AFlagActor*>& TemporaryFlagList);
-	UFUNCTION()
-	bool CreateSourceNeighbourFromFilters(AFlagActor* SourceFlag, const TArray<int> Path,
-	                                      TArray<FNeighbors>& OutSourceNeighbour);
-	UFUNCTION()
-	void SortByMostDesirableRatio(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source);
-	UPROPERTY(/*EditAnywhere,*/ BlueprintReadWrite, Category="06ControlPanelChallenge")
-	int NbOfChallenges = 3;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Challenge")
 	float LinearWeight = 1.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Challenge")
 	float ExplorationWeight = 1.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Challenge")
 	float PercentageRandomStartingPointSelection = 50;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Challenge")
 	FColor DGuardPathColor = FColor::Red;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Challenge")
 	int KLengthTarget = 2500;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Challenge")
 	int MaxGuardNb = 10;
 	UPROPERTY()
 	int KLenghtIterations;
@@ -172,19 +164,30 @@ public:
 	UPROPERTY()
 	int MaxKLenghtIterationsMod = 10;
 
+	/* Legacy Challenge */
+	void CreateChallenges();
+	void LegacyCreateChallengeGroups();
+	void LegacySelectAllChallengeSegments();
+	void PrintChallengeGroups();
+	void ConstructChallengePaths();
+	bool AreSameChallengeGroup(int FlagA, int FlagB);
+	void FilterAndSortOutAltAndBidirectional(TArray<AFlagActor*>& TemporaryFlagList);
+	bool CreateSourceNeighbourFromFilters(AFlagActor* SourceFlag, const TArray<int> Path,
+	                                      TArray<FNeighbors>& OutSourceNeighbour);
+	void LegacySelectChallengeSegments();
+	void SortByMostDesirableRatio(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source);
+	int PercentChanceOfMergingChallengeGroup = 50;
+	int NbOfChallenges = 3;
 	TArray<TArray<int>> ChallengeGroups;
 	TArray<TArray<int>> ChallengePath;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06ControlPanelChallenge")
+
+	/* Player Path Generation */
+	bool PlayerPathMoreThanKUntilGoal(int Source, int Step, TArray<int>& Path, int& Goal);
 	TArray<int> PlayerPath;
+
 
 	bool PathMoreThanKUtil(int Source, int KLenght, TArray<int>& Path, int& Goal);
 
-	bool GuardPathMoreThanKGenerator(int Source, int KLenght, FVector2d VERT, TArray<int>& Path, int& End);
-
-	bool PlayerPathMoreThanKUntilGoal(int Source, int Step, TArray<int>& Path, int& Goal);
-
-	UFUNCTION(BlueprintCallable, Category="06ControlPanelChallenge")
-	void LegacySelectChallengeSegments();
 
 	/* GeometryRefs */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="07GeometryReference")
@@ -194,8 +197,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="07GeometryReference")
 	AActor* EndPointIndicator;
 
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="08UserFriendlyButtons")
-	void GenerateAll();
+	
 
 	virtual void BeginPlay() override;
 
@@ -207,10 +209,11 @@ private:
 
 	TArray<int> FlagCurrentlySeen;
 	void AddAngleToSortValue(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source);
-	void AddExplorationBonusToSortValue(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source, TArray<int>& CameFrom);
+	void AddExplorationBonusToSortValue(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source,
+	                                    TArray<int>& CameFrom);
 	void AddExitBonusToSortValue(TArray<FNeighbors>& OutSourceNeighbors);
 	void DebugDirectionality(int FlagID);
-	
+
 	void FilterAllAlreadyInUse(TArray<AFlagActor*>& TemporaryFlagList);
 
 	FTimerHandle SimulationTimer;
