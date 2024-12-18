@@ -705,13 +705,10 @@ void ASkeletalNavMeshBoundsVolume::GenerateOneGuardPath()
 	FlagCurrentlySeen.Init(-1, FlagManager->GetFlagActorSize());
 
 	TArray<int> ReconstructedChallengePath;
-	GuardPathMoreThanKGenerator(StartingFlag, KLengthTarget, FVector2d(1, 1), EvaluatedGuardPath, EndingFlag);
-
-	if (EndingFlag < 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("GRDPTH: Something went wrong! Ending flag isnt valid"));
+	
+	if(!GuardPathMoreThanKGenerator(StartingFlag, KLengthTarget, FVector2d(1, 1), EvaluatedGuardPath, EndingFlag))
 		return;
-	}
+	
 	AStarPathReconstructor(EvaluatedGuardPath, StartingFlag, EndingFlag, ReconstructedChallengePath);
 	ChallengePath.Add(ReconstructedChallengePath);
 	DrawChallengePaths();
@@ -1306,6 +1303,7 @@ void ASkeletalNavMeshBoundsVolume::DebugDirectionality(int FlagID)
 	 * This function search recursively among all node from a starting point until 2 conditions
 	 * are met, minimal length and desired difficulty. Length is prescriptive, difficulty is indicative.
 */
+
 bool ASkeletalNavMeshBoundsVolume::PathMoreThanKUtil(int Source, int KLenght, TArray<int>& Path, int& Goal)
 {
 	/*security, prevent infinite stack*/
@@ -1426,17 +1424,18 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 		return ip1.SortValue > ip2.SortValue;
 	});
 
-
+	//Test each neighbors in priority order
 	for (int i = 0; i < SourceNeighbors.Num(); i++)
 	{
+		// Get Neighbors Actor
 		int NeighborsId = SourceNeighbors[i].ID;
 		AFlagActor* Neighbour = FlagManager->GetFlagActor(NeighborsId);
-
 		int NeighborWeight = Neighbour->SOFlag->Segment.Lenght;
 
+		//Ignore if Neighbors already been use in this path
 		if (Path[NeighborsId] != -1)
 			continue;
-
+		
 		bool VisibilityFilter = false;
 		for (int j = 0; j < Neighbour->SOFlag->Segment.VisibilityGroups.Num(); j++)
 		{
@@ -1450,15 +1449,9 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 
 		if (VisibilityFilter)
 			continue;
+		
 
-		if (Neighbour->SOFlag->Segment.PathType == EFlagPathType::GOLDEN)
-		{
-			if (!AreSameChallengeGroup(Source, NeighborsId))
-			{
-				continue;
-			}
-		}
-
+		//Length test with this Neighbors
 		if (NeighborWeight >= KLenght)
 		{
 			End = NeighborsId;
@@ -1674,6 +1667,12 @@ void ASkeletalNavMeshBoundsVolume::SortByMostDesirableRatio(TArray<FNeighbors>& 
 
 void ASkeletalNavMeshBoundsVolume::AddAngleToSortValue(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source)
 {
+	//Security
+	if (OutSourceNeighbors.IsEmpty())
+	{
+		return;
+	}
+	
 	//Source Direction
 	FVector SourceDirection;
 	if (Source->SOFlag->EndPointIds.Contains(OutSourceNeighbors[0].ID))
