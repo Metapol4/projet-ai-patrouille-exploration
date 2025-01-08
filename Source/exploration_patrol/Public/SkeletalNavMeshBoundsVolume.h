@@ -74,9 +74,6 @@ public:
 	/* Flags */
 	UFUNCTION()
 	void SendFlagBatch();
-	UFUNCTION(Category="02ControlPanelFlags")
-	void ResetAllFlagTypes();
-
 	TArray<FFlagSegment> FlagSegments;
 
 	/* Vision */
@@ -87,8 +84,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="03Vision")
 	TArray<FDebugVisionGroup> DSVisionPathsToHighlight;
 
-	/* Legacy Golden Path */
-	void FindGoldenPath();
 	float MinimumPathLenght = 6000;
 	TArray<int> GoldenPath;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -107,7 +102,6 @@ public:
 
 
 	/* Directionality */
-	void CalculateDirectionnalityButton();
 
 	void CalculateDirectionnality(EFlagType FlagType);
 
@@ -119,19 +113,14 @@ public:
 	EFlagType DebugFlagTypeDirection = EFlagType::SAFE;
 
 	/* Guards */
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="06Guards")
 	void GenerateOneGuardPath();
 	UFUNCTION()
 	void GenerateGuardPathsUntilFail();
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="06Guards")
 	void SimulateCurrentConfiguration();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="06Guards")
-	void FindPlayerPathEditor();
 	UFUNCTION(Category="06Guards")
 	bool FindPlayerPath();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="06Guards")
 	void DrawChallengePaths();
-	UFUNCTION(CallInEditor, BlueprintCallable, Category="06Guards")
 	void DrawLatestPlayerPath();
 	UFUNCTION()
 	void CalculateGuardPathVisionTimeSteps();
@@ -171,17 +160,9 @@ public:
 	int MaxKLenghtIterationsMod = 10;
 
 	/* Legacy Challenge */
-	void CreateChallenges();
-	void LegacyCreateChallengeGroups();
-	void LegacySelectAllChallengeSegments();
-	void PrintChallengeGroups();
-	void ConstructChallengePaths();
-	bool AreSameChallengeGroup(int FlagA, int FlagB);
 	void FilterAndSortOutAltAndBidirectional(TArray<AFlagActor*>& TemporaryFlagList);
 	bool CreateSourceNeighbourFromFilters(AFlagActor* SourceFlag, const TArray<int> Path,
 	                                      TArray<FNeighbors>& OutSourceNeighbour);
-	void LegacySelectChallengeSegments();
-	void SortByMostDesirableRatio(TArray<FNeighbors>& OutSourceNeighbors, AFlagActor* Source);
 	int PercentChanceOfMergingChallengeGroup = 50;
 	int NbOfChallenges = 3;
 	TArray<TArray<int>> ChallengeGroups;
