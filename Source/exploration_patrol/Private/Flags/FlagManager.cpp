@@ -46,6 +46,14 @@ void AFlagManager::ClearAll()
 	{
 		Flag->Destroy();
 	}
+	TArray<AActor*> DebugBillboards;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ADebugBillboardText::StaticClass(), DebugBillboards);
+	for (AActor* Flag : DebugBillboards)
+	{
+		Flag->Destroy();
+	}
+	FlagActors.Empty();
+	CurrentId = 0;
 }
 
 void AFlagManager::LinkFlags()
@@ -99,6 +107,20 @@ void AFlagManager::ReceiveSegmentBatch(const TArray<FFlagSegment>& SegmentBatch)
 	Segments = SegmentBatch;
 	CreateFlagsFromSegments();
 	LinkFlags();
+}
+
+void AFlagManager::ResetAllFlags()
+{
+	for (auto Flag : FlagActors)
+	{
+		Flag->SOFlag->Segment.VisionArea = Flag->SOFlag->Segment.Area;
+		Flag->SOFlag->Segment.Direction = EFlagDirection::NONE;
+		Flag->SOFlag->Segment.VisibilityGroups.Empty();
+		Flag->SOFlag->Segment.StepGroups.Empty();
+		Flag->SOFlag->Segment.FlagType = EFlagType::NONE;
+		Flag->SOFlag->Segment.PathType = EFlagPathType::NONE;
+		
+	}
 }
 
 

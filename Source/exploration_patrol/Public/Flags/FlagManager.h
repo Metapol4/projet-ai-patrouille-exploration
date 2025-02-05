@@ -57,6 +57,7 @@ public:
 	TArray<FFlagSegment> GetSegments() const;
 	TArray<AFlagActor*> GetFlagActors() const;
 	void ReceiveSegmentBatch(const TArray<FFlagSegment>& SegmentBatch);
+	void ResetAllFlags();
 	int CurrentId;
 	UFUNCTION()
 	void CalculateVisionGroups();

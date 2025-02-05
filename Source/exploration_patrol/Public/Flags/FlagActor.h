@@ -29,7 +29,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	USO_Flag* SOFlag;
-	ADebugBillboardText* VisibilityGroupText;
+	//ADebugBillboardText* VisibilityGroupText;
 	void DrawDebugSegmentFlag();
 	void AddToVisibilityGroup(int Group,bool UpdateText = true);
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")

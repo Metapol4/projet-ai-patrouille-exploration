@@ -21,6 +21,38 @@ struct FNeighbors
 	float SortValue = 0;
 };
 
+USTRUCT(BlueprintType)
+struct FScenarioCSVLine
+{
+	GENERATED_BODY()
+	int ID = 0;
+	//metrics
+	float AVGGenerationTime = 0;
+	float MEDGenerationTime = 0;
+	float MINGenerationTime = 0;
+	float MAXGenerationTime = 0;
+	
+	float AVGPlayerPathLength = 0;
+	float MEDPlayerPathLength = 0;
+	float MINPlayerPathLength = 0;
+	float MAXPlayerPathLength = 0;
+	
+	float AVGGeneratedGuardNB = 0;
+	float MEDGeneratedGuardNB = 0;
+	float MINGeneratedGuardNB = 0;
+	float MAXGeneratedGuardNB = 0;
+
+	//parameters used
+	float MaxNbOfGuards = 0;
+	float KlengthTarget = 0;
+	float PercentStartingSelection = 0;
+	float PercentSafe = 0;
+	float ExplorationW = 0;
+	float LinearW = 0;
+	float AngleTolerance = 0;
+	float GuardVisionRange = 0;
+};
+
 UCLASS()
 class EXPLORATION_PATROL_API ASkeletalNavMeshBoundsVolume : public ANavMeshBoundsVolume
 {
@@ -41,6 +73,64 @@ public:
 	void a06GenerateGuardPaths();
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
 	void GenerateAll();
+
+	/* Metrics */
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	void TestScenario();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	void WriteTestScenariosToCSV();
+	UFUNCTION(CallInEditor, BlueprintCallable, Category="01ControlPanel")
+	void TestAllScenario();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	int NbOfGenerations = 30;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	float AVGTimeToGenerate;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	float AVGPlayerPathLength;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	float AVGNbOfGuards;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	float MEDTimeToGenerate;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	float MEDPlayerPathLength;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	float MEDNbOfGuards;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	float MINTimeToGenerate;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	float MINPlayerPathLength;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	float MINNbOfGuards;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	float MAXTimeToGenerate;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	float MAXPlayerPathLength;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	float MAXNbOfGuards;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	float TimeToGenerate;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	float PlayerPathLength;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	int NbOfGuards;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	float TimeToGenerateComputeGeometry;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	float TimeToGenerateSendFlagBatch;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	float TimeToGenerateCalculateVisionGroups;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	float TimeToGenerateFindSafeSegments;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	float TimeToGenerateCalculateDirectionnality;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="00Metrics")
+	float TimeToGenerateGenerateGuardPathsUntilFail;
+	TArray<FScenarioCSVLine> ScenarioCSVResults;
+	
+	
+
+	UFUNCTION()
+	void DeterminePlayerPathLength();
 
 	/* Poly */
 	UFUNCTION()
@@ -69,7 +159,7 @@ public:
 	/* Utils */
 	UFUNCTION(CallInEditor, BlueprintCallable, Category="00Debugs")
 	void ClearDebugLine();
-	
+
 
 	/* Flags */
 	UFUNCTION()
@@ -143,7 +233,7 @@ public:
 	FColor DGuardPathColor = FColor::Red;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Guards")
 	bool UseDGuardPathColor = false;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Guards")
 	int KLengthTarget = 2500;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="06Guards")
@@ -184,7 +274,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="07GeometryReference")
 	AActor* EndPointIndicator;
 
-	
 
 	virtual void BeginPlay() override;
 

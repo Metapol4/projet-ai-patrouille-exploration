@@ -3,20 +3,301 @@
 #include "DataTypeUtils.h"
 #include "VectorTypes.h"
 #include "Kismet/KismetMathLibrary.h"
+#include <ctime>
+#include <fstream>
+#include <iostream>
 
 void ASkeletalNavMeshBoundsVolume::GenerateAll()
 {
-	ComputeGeometry();
+	std::clock_t c_startall = std::clock();
+	std::clock_t c_start = std::clock();
+	/*ComputeGeometry();
+	std::clock_t c_endgeo = std::clock();
+	float time_elapsed_ms = 1000.0 * (c_endgeo - c_start) / CLOCKS_PER_SEC;
+	TimeToGenerateComputeGeometry = time_elapsed_ms / 1000;
+	c_start = std::clock();
 	SendFlagBatch();
+	std::clock_t c_endflag = std::clock();
+	float time_elapsed_msflag = 1000.0 * (c_endflag - c_start) / CLOCKS_PER_SEC;
+	TimeToGenerateSendFlagBatch = time_elapsed_msflag / 1000;*/
+	FlagManager->ResetAllFlags();
+	c_start = std::clock();
 	CalculateVisionGroups();
+	std::clock_t c_endvisi = std::clock();
+	float time_elapsed_msvisi = 1000.0 * (c_endvisi - c_start) / CLOCKS_PER_SEC;
+	TimeToGenerateCalculateVisionGroups = time_elapsed_msvisi / 1000;
+	c_start = std::clock();
 	FindSafeSegments();
+	std::clock_t c_endsafe = std::clock();
+	float time_elapsed_mssafe = 1000.0 * (c_endsafe - c_start) / CLOCKS_PER_SEC;
+	TimeToGenerateFindSafeSegments = time_elapsed_mssafe / 1000;
+	c_start = std::clock();
 	CalculateDirectionnality(EFlagType::SAFE);
+	std::clock_t c_enddir = std::clock();
+	float time_elapsed_msdir = 1000.0 * (c_enddir - c_start) / CLOCKS_PER_SEC;
+	TimeToGenerateCalculateDirectionnality = time_elapsed_msdir / 1000;
+	c_start = std::clock();
 	GenerateGuardPathsUntilFail();
+	std::clock_t c_endguard = std::clock();
+	float time_elapsed_msguard = 1000.0 * (c_endguard - c_start) / CLOCKS_PER_SEC;
+	TimeToGenerateGenerateGuardPathsUntilFail = time_elapsed_msguard / 1000;
+	std::clock_t c_end = std::clock();
+	float time_elapsed_msall = 1000.0 * (c_end - c_startall) / CLOCKS_PER_SEC;
+	TimeToGenerate = time_elapsed_msall / 1000;
+}
+
+void ASkeletalNavMeshBoundsVolume::TestScenario()
+{
+	float SumTimeToGenerate = 0;
+	float SumPlayerPathLength = 0;
+	float SumNbOfGuards = 0;
+	TArray<float> AllTimeToGenerate;
+	TArray<float> AllPlayerPathLength;
+	TArray<float> AllNbOfGuards;
+
+	for (int i = 0; i < NbOfGenerations; i++)
+	{
+		GenerateAll();
+		SumTimeToGenerate += TimeToGenerate;
+		SumPlayerPathLength += PlayerPathLength;
+		SumNbOfGuards += NbOfGuards;
+		AllTimeToGenerate.Add(TimeToGenerate);
+		AllPlayerPathLength.Add(PlayerPathLength);
+		AllNbOfGuards.Add(NbOfGuards);
+	}
+	AVGTimeToGenerate = SumTimeToGenerate / NbOfGenerations;
+	AVGPlayerPathLength = SumPlayerPathLength / NbOfGenerations;
+	AVGNbOfGuards = SumNbOfGuards / NbOfGenerations;
+	AllTimeToGenerate.Sort();
+	AllPlayerPathLength.Sort();
+	AllNbOfGuards.Sort();
+	MINTimeToGenerate = AllTimeToGenerate[0];
+	MAXTimeToGenerate = AllTimeToGenerate[AllTimeToGenerate.Num() - 1];
+	int MedianIndex = AllTimeToGenerate.Num() / 2;
+	MEDTimeToGenerate = AllTimeToGenerate[MedianIndex];
+
+	MINPlayerPathLength = AllPlayerPathLength[0];
+	MAXPlayerPathLength = AllPlayerPathLength[AllPlayerPathLength.Num() - 1];
+	MedianIndex = AllPlayerPathLength.Num() / 2;
+	MEDPlayerPathLength = AllPlayerPathLength[MedianIndex];
+
+	MINNbOfGuards = AllNbOfGuards[0];
+	MAXNbOfGuards = AllNbOfGuards[AllNbOfGuards.Num() - 1];
+	MedianIndex = AllNbOfGuards.Num() / 2;
+	MEDNbOfGuards = AllNbOfGuards[MedianIndex];
+}
+
+void ASkeletalNavMeshBoundsVolume::WriteTestScenariosToCSV()
+{
+	if (ScenarioCSVResults.IsEmpty())
+		return;
+	/*FScenarioCSVLine TestStruct;
+	TestStruct.ID = 69;
+	// parameters
+	TestStruct.MaxNbOfGuards = 5.2f;
+	TestStruct.KlengthTarget = 8000.6f;
+	TestStruct.PercentStartingSelection = 45.3f;
+	TestStruct.PercentSafe = 2.1f;
+	TestStruct.ExplorationW = 98.5f;
+	TestStruct.LinearW = 89.7f;
+	TestStruct.AngleTolerance = 180.8f;
+	TestStruct.GuardVisionRange = 99999.9f;
+	// metrics
+
+	TestStruct.GenerationTime = 5.9f;
+	TestStruct.PlayerPathLength = 78222.3f;
+	TestStruct.GeneratedGuardNB = 45.6f;*/
+	std::ofstream myfile;
+	myfile.open("D:/scenarioresults.csv");
+	myfile <<
+		"ID,"
+		"Average Generation Time,Average Player Distance,Average Number Of Generated Guards,"
+		"Min Generation Time,Med Generation Time,Max Generation Time,"
+		"Min Player Distance,Med Player Distance,Max Player Distance,"
+		"Min Number Of Generated Guards,Med Number Of Generated Guards,Max Number Of Generated Guards,"
+		"MaxGuards,Klength,Percent Selection,Percent Safe,Exploration Weight,LinearWeight,AngleTolerance,GuardVisionRange\n";
+	for (auto CurrentResult : ScenarioCSVResults)
+	{
+		FString Current = FString::SanitizeFloat(CurrentResult.ID);
+		Current.Append(",");
+		Current.Append(FString::SanitizeFloat(CurrentResult.AVGGenerationTime));
+		Current.Append(",");
+		Current.Append(FString::SanitizeFloat(CurrentResult.AVGPlayerPathLength));
+		Current.Append(",");
+		Current.Append(FString::SanitizeFloat(CurrentResult.AVGGeneratedGuardNB));
+		Current.Append(",");
+		Current.Append(FString::SanitizeFloat(CurrentResult.MINGenerationTime));
+		Current.Append(",");
+		Current.Append(FString::SanitizeFloat(CurrentResult.MEDGenerationTime));
+		Current.Append(",");
+		Current.Append(FString::SanitizeFloat(CurrentResult.MAXGenerationTime));
+		Current.Append(",");
+		Current.Append(FString::SanitizeFloat(CurrentResult.MINPlayerPathLength));
+		Current.Append(",");
+		Current.Append(FString::SanitizeFloat(CurrentResult.MEDPlayerPathLength));
+		Current.Append(",");
+		Current.Append(FString::SanitizeFloat(CurrentResult.MAXPlayerPathLength));
+		Current.Append(",");
+		Current.Append(FString::SanitizeFloat(CurrentResult.MINGeneratedGuardNB));
+		Current.Append(",");
+		Current.Append(FString::SanitizeFloat(CurrentResult.MEDGeneratedGuardNB));
+		Current.Append(",");
+		Current.Append(FString::SanitizeFloat(CurrentResult.MAXGeneratedGuardNB));
+		Current.Append(",");
+		Current.Append(FString::SanitizeFloat(CurrentResult.MaxNbOfGuards));
+		Current.Append(",");
+		Current.Append(FString::SanitizeFloat(CurrentResult.KlengthTarget));
+		Current.Append(",");
+		Current.Append(FString::SanitizeFloat(CurrentResult.PercentStartingSelection));
+		Current.Append(",");
+		Current.Append(FString::SanitizeFloat(CurrentResult.PercentSafe));
+		Current.Append(",");
+		Current.Append(FString::SanitizeFloat(CurrentResult.ExplorationW));
+		Current.Append(",");
+		Current.Append(FString::SanitizeFloat(CurrentResult.LinearW));
+		Current.Append(",");
+		Current.Append(FString::SanitizeFloat(CurrentResult.AngleTolerance));
+		Current.Append(",");
+		Current.Append(FString::SanitizeFloat(CurrentResult.GuardVisionRange));
+		Current.Append("\n");
+
+		myfile << std::string(TCHAR_TO_UTF8(*Current));
+	}
+	myfile.close();
+}
+
+void ASkeletalNavMeshBoundsVolume::TestAllScenario()
+{
+	ScenarioCSVResults.Empty();
+	TArray<TArray<float>> ValueMatrix;
+	TArray<float> ArrayColumn;
+	ArrayColumn.Init(0, 3);
+	//ValueMatrix.Init(ArrayColumn, 8);
+	ValueMatrix.Init(ArrayColumn, 4);
+	/*low*/
+	ValueMatrix[0][0] = 2;
+	ValueMatrix[1][0] = 1000;
+	ValueMatrix[2][0] = 10;
+	ValueMatrix[3][0] = 5;
+	//ValueMatrix[4][0] = 0;
+	//ValueMatrix[5][0] = 0;
+	//ValueMatrix[6][0] = 30;
+	//ValueMatrix[7][0] = 200;
+	/*base*/
+	ValueMatrix[0][1] = 4;
+	ValueMatrix[1][1] = 2000;
+	ValueMatrix[2][1] = 50;
+	ValueMatrix[3][1] = 10;
+	//ValueMatrix[4][1] = 1;
+	//ValueMatrix[5][1] = 1;
+	//ValueMatrix[6][1] = 45;
+	//ValueMatrix[7][1] = 750;
+	/*high*/
+	ValueMatrix[0][2] = 10;
+	ValueMatrix[1][2] = 4000;
+	ValueMatrix[2][2] = 90;
+	ValueMatrix[3][2] = 20;
+	//ValueMatrix[4][2] = 2;
+	//ValueMatrix[5][2] = 2;
+	//ValueMatrix[6][2] = 90;
+	//ValueMatrix[7][2] = 2000;
+
+	int a, b, c, d = 0; //, e, f, g, h = 0;
+
+	for (int i = 0; i < 81 /*6561*/; i++)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SCNRIO: progress:  %d"), i);
+
+		a = i % 3;
+		b = FMathf::Floor(i / 3);
+		b %= 3;
+		c = FMathf::Floor(i / 9);
+		c %= 3;
+		d = FMathf::Floor(i / 27);
+		d %= 3;
+		/*e = FMathf::Floor(i / 81);
+		e %= 3;
+		f = FMathf::Floor(i / 243);
+		f %= 3;
+		g = FMathf::Floor(i / 729);
+		g %= 3;
+		h = FMathf::Floor(i / 2187);
+		h %= 3;*/
+
+		float ScenGuardNB = ValueMatrix[0][a];
+		float ScenKlength = ValueMatrix[1][b];
+		float ScenPercentSelect = ValueMatrix[2][c];
+		float ScenPercentSafe = ValueMatrix[3][d];
+		/*float ScenExploration = ValueMatrix[4][e];
+		float ScenLinear = ValueMatrix[5][f];
+		float ScenAngle = ValueMatrix[6][g];
+		float ScenVisRange = ValueMatrix[7][h];*/
+
+		MaxGuardNb = ScenGuardNB;
+		KLengthTarget = ScenKlength;
+		PercentageRandomStartingPointSelection = ScenPercentSelect;
+		PercentageSafeSegment = ScenPercentSafe;
+		/*ExplorationWeight = ScenExploration;
+		LinearWeight = ScenLinear;
+		AngleTolerance = ScenAngle;
+		FlagManager->GuardVisionRange = ScenVisRange;*/
+
+		TestScenario();
+		FScenarioCSVLine NewLine;
+		NewLine.ID = i;
+		// parameters
+		NewLine.MaxNbOfGuards = MaxGuardNb;
+		NewLine.KlengthTarget = KLengthTarget;
+		NewLine.PercentStartingSelection = PercentageRandomStartingPointSelection;
+		NewLine.PercentSafe = PercentageSafeSegment;
+		NewLine.ExplorationW = ExplorationWeight;
+		NewLine.LinearW = LinearWeight;
+		NewLine.AngleTolerance = AngleTolerance;
+		NewLine.GuardVisionRange = FlagManager->GuardVisionRange;
+		// metrics
+
+		NewLine.AVGGenerationTime = AVGTimeToGenerate;
+		NewLine.AVGPlayerPathLength = AVGPlayerPathLength;
+		NewLine.AVGGeneratedGuardNB = AVGNbOfGuards;
+
+		NewLine.MEDGenerationTime = MEDTimeToGenerate;
+		NewLine.MEDPlayerPathLength = MEDPlayerPathLength;
+		NewLine.MEDGeneratedGuardNB = MEDNbOfGuards;
+
+		NewLine.MINGenerationTime = MINTimeToGenerate;
+		NewLine.MINPlayerPathLength = MINPlayerPathLength;
+		NewLine.MINGeneratedGuardNB = MINNbOfGuards;
+
+		NewLine.MAXGenerationTime = MAXTimeToGenerate;
+		NewLine.MAXPlayerPathLength = MAXPlayerPathLength;
+		NewLine.MAXGeneratedGuardNB = MaxGuardNb;
+
+		ScenarioCSVResults.Add(NewLine);
+		/*FString Current = FString::SanitizeFloat(scen0);
+		Current.Append(" - ");
+		Current.Append(FString::Printf(TEXT("%f"), scen1));
+		Current.Append(" - ");
+		Current.Append(FString::Printf(TEXT("%f"), scen2));
+		Current.Append(" - ");
+		Current.Append(FString::Printf(TEXT("%f"), scen3));
+		Current.Append(" - ");
+		Current.Append(FString::Printf(TEXT("%f"), scen4));
+		Current.Append(" - ");
+		Current.Append(FString::Printf(TEXT("%f"), scen5));
+		Current.Append(" - ");
+		Current.Append(FString::Printf(TEXT("%f"), scen6));
+		Current.Append(" - ");
+		Current.Append(FString::Printf(TEXT("%f"), scen7));
+		UE_LOG(LogTemp, Warning, TEXT("SCNRO: %s"), *Current);*/
+	}
+	WriteTestScenariosToCSV();
 }
 
 void ASkeletalNavMeshBoundsVolume::BeginPlay()
 {
 	Super::BeginPlay();
+	ComputeGeometry();
+	SendFlagBatch();
 }
 
 //CONSOLE FUNCTION
@@ -24,6 +305,19 @@ void ASkeletalNavMeshBoundsVolume::ClearDebugLine()
 {
 	FlushPersistentDebugLines(GetWorld());
 	FlagManager->ResetAllDebugTexts();
+}
+
+void ASkeletalNavMeshBoundsVolume::DeterminePlayerPathLength()
+{
+	PlayerPathLength = 0;
+	if (PlayerPath.IsEmpty())
+		return;
+	for (int FlagId : PlayerPath)
+	{
+		AFlagActor* ChallengeFlag = FlagManager->GetFlagActor(FlagId);
+
+		PlayerPathLength += ChallengeFlag->SOFlag->Segment.Lenght;
+	}
 }
 
 void ASkeletalNavMeshBoundsVolume::ComputeGeometry()
@@ -34,6 +328,7 @@ void ASkeletalNavMeshBoundsVolume::ComputeGeometry()
 	if (!StartPointIndicator) return;
 	if (!EndPointIndicator) return;
 	FlagSegments.Empty();
+	PolyArray.Empty();
 
 	NavPoly_GetAllPolys(PolyArray);
 	for (NavNodeRef Polys : PolyArray)
@@ -65,14 +360,14 @@ void ASkeletalNavMeshBoundsVolume::ComputeGeometry()
 
 		if (DNodes)
 		{
-			DrawDebugSphere(
+			/*DrawDebugSphere(
 				GetWorld(),
 				SegmentBeginPoint,
 				5,
 				12,
 				FColor::Cyan,
 				true,
-				300);
+				300);*/
 		}
 
 		TArray<NavNodeRef> NeighborsNodes;
@@ -120,14 +415,14 @@ void ASkeletalNavMeshBoundsVolume::ComputeGeometry()
 					if (DSegments)
 					{
 						FVector AdjustedLocation = SegmentBeginPoint + (SegmentEndPoint - SegmentBeginPoint) * 0.9f;
-						DrawDebugLine(
+						/*DrawDebugLine(
 							GetWorld(),
 							SegmentBeginPoint,
 							AdjustedLocation,
 							FColor::Red,
 							true,
 							300
-						);
+						);*/
 					}
 				}
 			}
@@ -139,7 +434,10 @@ void ASkeletalNavMeshBoundsVolume::ComputeGeometry()
 void ASkeletalNavMeshBoundsVolume::SendFlagBatch()
 {
 	if (FlagManager)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("FLGBTCH: flag segments length %d"), FlagSegments.Num());
 		FlagManager->ReceiveSegmentBatch(FlagSegments);
+	}
 }
 
 void ASkeletalNavMeshBoundsVolume::CalculateVisionGroups()
@@ -178,14 +476,14 @@ void ASkeletalNavMeshBoundsVolume::FindSafeSegments()
 	for (int i = 0; i < ListLimit; i++)
 	{
 		TemporaryFlagList[i]->SOFlag->Segment.FlagType = EFlagType::SAFE;
-		DrawDebugLine(
+		/*DrawDebugLine(
 			GetWorld(),
 			TemporaryFlagList[i]->SOFlag->Segment.BeginPosition,
 			TemporaryFlagList[i]->SOFlag->Segment.EndPosition,
 			FColor::Yellow,
 			true,
 			300
-		);
+		);*/
 	}
 }
 
@@ -357,6 +655,14 @@ void ASkeletalNavMeshBoundsVolume::GenerateOneGuardPath()
 void ASkeletalNavMeshBoundsVolume::GenerateGuardPathsUntilFail()
 {
 	EmptyChallengePath();
+	if (MaxGuardNb <= 0)
+	{
+		FindPlayerPath();
+		ClearDebugLine();
+		DrawLatestPlayerPath();
+		return;
+	}
+
 	int Iterations = 0;
 	for (int i = 0; i < 10; i++)
 	{
@@ -366,7 +672,7 @@ void ASkeletalNavMeshBoundsVolume::GenerateGuardPathsUntilFail()
 		{
 			if (!ChallengePath.IsEmpty())
 			{
-				UE_LOG(LogTemp, Warning, TEXT("pop"));
+				//UE_LOG(LogTemp, Warning, TEXT("pop"));
 				PopChallengePath();
 			}
 		}
@@ -379,6 +685,7 @@ void ASkeletalNavMeshBoundsVolume::GenerateGuardPathsUntilFail()
 		if (ChallengePath.Num() >= MaxGuardNb && MaxGuardNb != 0)
 			break;
 	}
+	NbOfGuards = ChallengePath.Num();
 	ClearDebugLine();
 	DrawLatestPlayerPath();
 	DrawChallengePaths();
@@ -399,7 +706,7 @@ void ASkeletalNavMeshBoundsVolume::SimulateCurrentConfiguration()
 
 void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 {
-	UE_LOG(LogTemp, Warning, TEXT("SIMUL : DRAW STEP # %d"), SimulationIterations)
+	//UE_LOG(LogTemp, Warning, TEXT("SIMUL : DRAW STEP # %d"), SimulationIterations)
 
 	if (!PlayerPath.IsEmpty() && !ChallengePath.IsEmpty())
 	{
@@ -407,7 +714,7 @@ void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 		int PlayerIndex = MaxStep - SimulationIterations;
 		if (PlayerIndex < 0)
 		{
-			UE_LOG(LogTemp, Error, TEXT("Player index negative"))
+			//UE_LOG(LogTemp, Error, TEXT("Player index negative"))
 			return;
 		}
 		AFlagActor* PlayerFlag = FlagManager->GetFlagActor(PlayerPath[PlayerIndex]);
@@ -450,10 +757,10 @@ void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 			//Get Guard Flag
 			AFlagActor* GuardFlag = FlagManager->GetFlagActor(GuardPath[CurrentCursor]);
 			FString MainText = "Guard " + FString::FromInt(iterator);
-			GuardFlag->VisibilityGroupText->SetText(MainText);
+			//GuardFlag->VisibilityGroupText->SetText(MainText);
 			FString AdditiveText = FString::FromInt(CurrentCursor) + " / " + FString::FromInt(GuardPath.Num());
-			GuardFlag->VisibilityGroupText->AddText(AdditiveText);
-			GuardFlag->VisibilityGroupText->SetTextColor(FColor::Yellow);
+			//GuardFlag->VisibilityGroupText->AddText(AdditiveText);
+			//GuardFlag->VisibilityGroupText->SetTextColor(FColor::Yellow);
 
 			FVector GuardPosition = GuardFlag->GetActorLocation();
 
@@ -480,7 +787,7 @@ void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 				GuardPosition + FVector(0, 0, 100),
 				GuardDirection,
 				750,
-				FMath::DegreesToRadians(45.0f),
+				FMath::DegreesToRadians(AngleTolerance),
 				FMath::DegreesToRadians(45.0f),
 				12,
 				FColor::Red,
@@ -494,7 +801,7 @@ void ASkeletalNavMeshBoundsVolume::DrawNextStep(int MaxStep)
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("SIMUL : DRAW STEP # %d FAILED , LIST EMPTY"), SimulationIterations)
+		//UE_LOG(LogTemp, Error, TEXT("SIMUL : DRAW STEP # %d FAILED , LIST EMPTY"), SimulationIterations)
 	}
 	SimulationIterations++;
 	if (SimulationIterations >= MaxStep)
@@ -529,6 +836,7 @@ bool ASkeletalNavMeshBoundsVolume::FindPlayerPath()
 	PlayerPath.Empty();
 	PlayerPath = ReconstructedChallengePath;
 	DrawLatestPlayerPath();
+	DeterminePlayerPathLength();
 	return true;
 }
 
@@ -545,14 +853,14 @@ void ASkeletalNavMeshBoundsVolume::DrawChallengePaths()
 			AFlagActor* ChallengeFlag = FlagManager->GetFlagActor(ChallengePathID);
 			if (UseDGuardPathColor)
 				MainColor = DGuardPathColor;
-			DrawDebugLine(
+			/*DrawDebugLine(
 				GetWorld(),
 				ChallengeFlag->SOFlag->Segment.BeginPosition,
 				ChallengeFlag->SOFlag->Segment.EndPosition,
 				MainColor,
 				true,
 				300
-			);
+			);*/
 		}
 	}
 }
@@ -569,14 +877,14 @@ void ASkeletalNavMeshBoundsVolume::DrawLatestPlayerPath()
 		{
 			MainColor = FColor::Purple;
 		}
-		DrawDebugLine(
+		/*DrawDebugLine(
 			GetWorld(),
 			ChallengeFlag->SOFlag->Segment.BeginPosition,
 			ChallengeFlag->SOFlag->Segment.EndPosition,
 			MainColor,
 			true,
 			300
-		);
+		);*/
 	}
 }
 
@@ -860,7 +1168,7 @@ float ASkeletalNavMeshBoundsVolume::AStarPathReconstructor(TArray<int> CameFrom,
 	{
 		if (GoalID < 0)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("CHLG : FAIL AT %d"), GoalID);
+			//UE_LOG(LogTemp, Warning, TEXT("CHLG : FAIL AT %d"), GoalID);
 			return -1;
 		}
 		//UE_LOG(LogTemp, Warning, TEXT("%d"), GoalID);
@@ -886,17 +1194,17 @@ void ASkeletalNavMeshBoundsVolume::DebugDirectionality(int FlagID)
 	switch (FlagActor->SOFlag->Segment.Direction)
 	{
 	case EFlagDirection::NONE:
-		DrawDebugLine(
+		/*DrawDebugLine(
 			GetWorld(),
 			FlagActor->SOFlag->Segment.BeginPosition,
 			FlagActor->SOFlag->Segment.EndPosition,
 			FColor::Red,
 			true,
 			300
-		);
+		);*/
 		break;
 	case EFlagDirection::BEGIN_END:
-		DrawDebugDirectionalArrow(
+		/*DrawDebugDirectionalArrow(
 			GetWorld(),
 			AdjustedBegin,
 			AdjustedEnd,
@@ -904,10 +1212,10 @@ void ASkeletalNavMeshBoundsVolume::DebugDirectionality(int FlagID)
 			FColor::Yellow,
 			true,
 			300
-		);
+		);*/
 		break;
 	case EFlagDirection::END_BEGIN:
-		DrawDebugDirectionalArrow(
+		/*DrawDebugDirectionalArrow(
 			GetWorld(),
 			AdjustedEnd,
 			AdjustedBegin,
@@ -915,10 +1223,10 @@ void ASkeletalNavMeshBoundsVolume::DebugDirectionality(int FlagID)
 			FColor::Yellow,
 			true,
 			300
-		);
+		);*/
 		break;
 	case EFlagDirection::BOTH:
-		DrawDebugDirectionalArrow(
+		/*DrawDebugDirectionalArrow(
 			GetWorld(),
 			AdjustedBegin,
 			AdjustedEnd,
@@ -926,8 +1234,8 @@ void ASkeletalNavMeshBoundsVolume::DebugDirectionality(int FlagID)
 			FColor::Green,
 			true,
 			300
-		);
-		DrawDebugDirectionalArrow(
+		);*/
+		/*DrawDebugDirectionalArrow(
 			GetWorld(),
 			AdjustedEnd,
 			AdjustedBegin,
@@ -935,17 +1243,17 @@ void ASkeletalNavMeshBoundsVolume::DebugDirectionality(int FlagID)
 			FColor::Green,
 			true,
 			300
-		);
+		);*/
 		break;
 	case EFlagDirection::IMPOSSIBLE:
-		DrawDebugLine(
+		/*DrawDebugLine(
 			GetWorld(),
 			FlagActor->SOFlag->Segment.BeginPosition,
 			FlagActor->SOFlag->Segment.EndPosition,
 			FColor::Black,
 			true,
 			300
-		);
+		);*/
 		break;
 	default: ;
 	}
@@ -1104,7 +1412,7 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 		}
 		if (OtherGuardFilter)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("CONTINUE : OTHER GUARD AT : %d"), NeighborsId)
+			//UE_LOG(LogTemp, Warning, TEXT("CONTINUE : OTHER GUARD AT : %d"), NeighborsId)
 			continue;
 		}
 
@@ -1113,7 +1421,7 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 		//	... if K lenght reached with next neighbors
 		if (NeighborWeight >= KLenght)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("RETURN : DESIRED LENGHT REACHED"))
+			//UE_LOG(LogTemp, Warning, TEXT("RETURN : DESIRED LENGHT REACHED"))
 			End = NeighborsId;
 			Path[NeighborsId] = Source;
 			return true;
@@ -1121,7 +1429,7 @@ bool ASkeletalNavMeshBoundsVolume::GuardPathMoreThanKGenerator(int Source, int K
 		// ... if max iteration has been reached
 		if (GuardKLenghtIterations > MaxKLenghtIterationsMod * KLengthTarget)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("RETURN : MAX ITERATION"))
+			//UE_LOG(LogTemp, Warning, TEXT("RETURN : MAX ITERATION"))
 			End = NeighborsId;
 			Path[NeighborsId] = Source;
 			return true;

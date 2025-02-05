@@ -37,24 +37,24 @@ void AFlagActor::Tick(float DeltaTime)
 }
 
 void AFlagActor::DrawDebugSegmentFlag()
-{
+{/*
 	//DrawDebugBox(GetWorld(), GetActorLocation(), FVector(25, 25, 25), FColor::Green, true);
 	if (VisibilityGroupText)
 		VisibilityGroupText->Destroy();
 	VisibilityGroupText = GetWorld()->SpawnActor<ADebugBillboardText>(ADebugBillboardText::StaticClass(),
 	                                                                  GetActorLocation() + FVector(0, 0, 50),
-	                                                                  FRotator::ZeroRotator);
+	                                                                  FRotator::ZeroRotator);*/
 }
 
 void AFlagActor::AddToVisibilityGroup(int Group, bool UpdateText)
 {
 	SOFlag->Segment.VisibilityGroups.Add(Group);
-	if (UpdateText)
-		VisibilityGroupText->AddText(FString::FromInt(Group));
+	/*if (UpdateText)
+		VisibilityGroupText->AddText(FString::FromInt(Group));*/
 }
 
 void AFlagActor::SeeVisionGroup()
-{
+{/*
 	auto manager = UGameplayStatics::GetActorOfClass(GetWorld(), AFlagManager::StaticClass());
 	AFlagManager* FlagManager = Cast<AFlagManager>(manager);
 	FDebugVisionGroup DebugInfo;
@@ -65,16 +65,16 @@ void AFlagActor::SeeVisionGroup()
 	else
 	{
 		FlagManager->AddToShowVisionGroupActor(DebugInfo);
-	}
+	}*/
 }
 
 void AFlagActor::ResetText()
-{
-	VisibilityGroupText->ResetText();
+{/*
+	VisibilityGroupText->ResetText();*/
 }
 
 void AFlagActor::SetVisionGroupText()
-{
+{/*
 	VisibilityGroupText->SetText(FString::FromInt(SOFlag->Segment.id));
-	VisibilityGroupText->SetTextColor(DVisionGroupColour);
+	VisibilityGroupText->SetTextColor(DVisionGroupColour);*/
 }
