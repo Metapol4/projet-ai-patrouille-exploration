@@ -21,6 +21,7 @@ struct FNeighbors
 	float SortValue = 0;
 };
 
+
 USTRUCT(BlueprintType)
 struct FScenarioCSVLine
 {
@@ -276,6 +277,7 @@ public:
 
 
 	virtual void BeginPlay() override;
+
 
 private:
 	bool TestDirectionnality(FVector StartLocation, FVector EndLocation);

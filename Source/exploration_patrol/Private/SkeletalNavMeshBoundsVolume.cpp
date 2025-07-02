@@ -492,7 +492,6 @@ void ASkeletalNavMeshBoundsVolume::FindBeginAndEndFlags()
 	int NbOfFlag = FlagManager->GetFlagActorSize();
 	if (NbOfFlag == -1)
 		return;
-
 	float minDistanceToStart = INFINITY;
 	float minDistanceToEnd = INFINITY;
 	for (int i = 0; i < NbOfFlag; i++)
@@ -1194,17 +1193,17 @@ void ASkeletalNavMeshBoundsVolume::DebugDirectionality(int FlagID)
 	switch (FlagActor->SOFlag->Segment.Direction)
 	{
 	case EFlagDirection::NONE:
-		/*DrawDebugLine(
+		DrawDebugLine(
 			GetWorld(),
 			FlagActor->SOFlag->Segment.BeginPosition,
 			FlagActor->SOFlag->Segment.EndPosition,
 			FColor::Red,
 			true,
 			300
-		);*/
+		);
 		break;
 	case EFlagDirection::BEGIN_END:
-		/*DrawDebugDirectionalArrow(
+		DrawDebugDirectionalArrow(
 			GetWorld(),
 			AdjustedBegin,
 			AdjustedEnd,
@@ -1212,10 +1211,10 @@ void ASkeletalNavMeshBoundsVolume::DebugDirectionality(int FlagID)
 			FColor::Yellow,
 			true,
 			300
-		);*/
+		);
 		break;
 	case EFlagDirection::END_BEGIN:
-		/*DrawDebugDirectionalArrow(
+		DrawDebugDirectionalArrow(
 			GetWorld(),
 			AdjustedEnd,
 			AdjustedBegin,
@@ -1223,10 +1222,10 @@ void ASkeletalNavMeshBoundsVolume::DebugDirectionality(int FlagID)
 			FColor::Yellow,
 			true,
 			300
-		);*/
+		);
 		break;
 	case EFlagDirection::BOTH:
-		/*DrawDebugDirectionalArrow(
+		DrawDebugDirectionalArrow(
 			GetWorld(),
 			AdjustedBegin,
 			AdjustedEnd,
@@ -1234,8 +1233,8 @@ void ASkeletalNavMeshBoundsVolume::DebugDirectionality(int FlagID)
 			FColor::Green,
 			true,
 			300
-		);*/
-		/*DrawDebugDirectionalArrow(
+		);
+		DrawDebugDirectionalArrow(
 			GetWorld(),
 			AdjustedEnd,
 			AdjustedBegin,
@@ -1243,17 +1242,17 @@ void ASkeletalNavMeshBoundsVolume::DebugDirectionality(int FlagID)
 			FColor::Green,
 			true,
 			300
-		);*/
+		);
 		break;
 	case EFlagDirection::IMPOSSIBLE:
-		/*DrawDebugLine(
+		DrawDebugLine(
 			GetWorld(),
 			FlagActor->SOFlag->Segment.BeginPosition,
 			FlagActor->SOFlag->Segment.EndPosition,
 			FColor::Black,
 			true,
 			300
-		);*/
+		);
 		break;
 	default: ;
 	}
